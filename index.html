@@ -682,10 +682,10 @@ function importCSV(event){
     const lines=e.target.result.split('\n').map(l=>l.trim()).filter(Boolean);
     const data=loadLocal();let imported=0,skipped=0;
     lines.forEach(line=>{
-      if(line.toLowerCase().startsWith('date'))return;
       const cols=line.split(',');
-      if(cols.length<5){skipped++;return;}
-      let raw=cols[0].trim(),key='';
+      const raw=(cols[0]||'').trim().replace(/^"|"$/g,'');
+      // ── Only process rows where col 0 is a recognisable date ──
+      let key='';
       if(/^\d{4}-\d{2}-\d{2}$/.test(raw)){
         key=raw;
       } else if(/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(raw)){
@@ -698,14 +698,24 @@ function importCSV(event){
         const serial=parseInt(raw);
         const d=new Date(Math.round((serial-25569)*86400*1000));
         key=`${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`;
-      } else {skipped++;return;}
+      } else {
+        // Not a date row — silently skip (headers, fragments, titles, blanks)
+        return;
+      }
       if(!/^\d{4}-\d{2}-\d{2}$/.test(key)){skipped++;return;}
-      const rawMm=(cols[4]||'').trim();
+      // ── Parse rainfall (col 4) ──
+      const rawMm=(cols[4]||'').trim().replace(/^"|"$/g,'');
+      // Skip text values like 'Pre-season', or formula results
       if(/[a-zA-Z]/.test(rawMm)){skipped++;return;}
       const cleanMm=rawMm.replace(/[^0-9.-]/g,'');
       const mmVal=cleanMm===''?0:parseFloat(cleanMm);
       if(isNaN(mmVal)||mmVal<0){skipped++;return;}
-      data[key]={mm:Math.round(mmVal*10)/10,event:(cols[6]||'').trim(),notes:(cols[7]||'').trim()};
+      // ── Save record ──
+      data[key]={
+        mm:Math.round(mmVal*10)/10,
+        event:(cols[8]||'').trim().replace(/^"|"$/g,''),
+        notes:(cols[10]||'').trim().replace(/^"|"$/g,'')
+      };
       imported++;
     });
     saveLocal(data);
