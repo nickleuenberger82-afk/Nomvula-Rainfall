@@ -476,7 +476,7 @@ function computeStats(data){
     const d=parseKey(k),yr=d.getFullYear(),mo=d.getMonth()+1;
     allTotal+=v.mm;if(v.mm>allMax){allMax=v.mm;allMaxKey=k;}
     if(yr===cy&&mo===cm){monthly+=v.mm;if(v.mm>0)monthlyRain++;}
-    if(d>=SEASON_START&&d<=SEASON_END){seasonTotal+=v.mm;if(v.mm>0){seasonRain++;if(v.mm>maxDay){maxDay=v.mm;maxKey=k;}}else seasonDry++;}
+    if(d>=SEASON_START&&d<=SEASON_END){seasonTotal=Math.round((seasonTotal+v.mm)*10)/10;if(v.mm>0){seasonRain++;if(v.mm>maxDay){maxDay=v.mm;maxKey=k;}}else seasonDry++;}
     if(yr===2025){y2025+=v.mm;if(v.mm>0)y2025Rain++;}
     if(yr===2026){y2026+=v.mm;if(v.mm>0)y2026Rain++;}
   });
@@ -630,8 +630,15 @@ function importCSV(event){
       }
       else{skipped++;return;}
       if(!/^\d{4}-\d{2}-\d{2}$/.test(key)){skipped++;return;}
-      const mm=parseFloat(cols[4]);if(isNaN(mm)){skipped++;return;}
-      if(!data[key]){data[key]={mm,event:cols[6]||'',notes:cols[7]||''};imported++;}else skipped++;
+      // Clean the mm value — handle empty, spaces, dashes
+      const rawMm=(cols[4]||'').trim().replace(/[^0-9.-]/g,'');
+      if(rawMm===''||rawMm==='-'){
+        // Blank cell = 0 rainfall (dry day), still import it
+        data[key]={mm:0,event:cols[6]||'',notes:cols[7]||''};imported++;return;
+      }
+      const mm=parseFloat(rawMm);if(isNaN(mm)){skipped++;return;}
+      // Always overwrite with imported value to ensure accuracy
+      data[key]={mm,event:cols[6]||'',notes:cols[7]||''};imported++;
     });
     saveLocal(data);
     document.getElementById('importResult').textContent=`✓ Imported ${imported} records. ${skipped} skipped.`;
