@@ -548,7 +548,12 @@ function renderHome(){
 function render7DayChart(data){
   const labels=[],values=[],colors=[];
   for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const k=`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;labels.push(DAYS_S[d.getDay()]);values.push(data[k]?.mm??0);colors.push(i===0?'#1a3a2a':'#52b788');}
-  const ctx=document.getElementById('chart7day').getContext('2d');
+  // Fix for Samsung mobile — replace canvas element
+  const oldCanvas7=document.getElementById('chart7day');
+  const newCanvas7=document.createElement('canvas');
+  newCanvas7.id='chart7day';
+  oldCanvas7.parentNode.replaceChild(newCanvas7,oldCanvas7);
+  const ctx=newCanvas7.getContext('2d');
   if(chart7)chart7.destroy();
   chart7=new Chart(ctx,{type:'bar',data:{labels,datasets:[{data:values,backgroundColor:colors,borderRadius:6,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw} mm`}}},scales:{x:{grid:{display:false},ticks:{font:{family:'Space Mono',size:10}}},y:{grid:{color:'#f0f0ec'},ticks:{font:{family:'Space Mono',size:9}},beginAtZero:true}}}});
 }
@@ -561,6 +566,14 @@ function renderRecentLog(data){
 }
 
 function renderAnalysis(){
+  // Small delay ensures canvas is fully rendered on mobile before Chart.js runs
+  if(typeof window !== 'undefined' && window.innerWidth < 600){
+    setTimeout(()=>_renderAnalysis(), 80);
+    return;
+  }
+  _renderAnalysis();
+}
+function _renderAnalysis(){
   const data=loadLocal(),st=computeStats(data),col=statusCol(st.seasonTotal);
   const set=(id,val,cls='')=>{const el=document.getElementById(id);if(el){el.textContent=val;if(cls)el.className=`an-val ${cls}`;}};
   set('anSeasonTotal',st.seasonTotal?`${st.seasonTotal} mm`:'—',col);
@@ -602,7 +615,12 @@ function renderAnalysis(){
     const realPct=Math.round(currSeason/hst.avg*100);
     document.getElementById('sPct').textContent=currSeason>0?`${realPct}%`:'—';
     // Render historical bar chart
-    const hctx=document.getElementById('chartHistSeason').getContext('2d');
+    // Fix for Samsung mobile — replace canvas element
+    const oldCanvasH=document.getElementById('chartHistSeason');
+    const newCanvasH=document.createElement('canvas');
+    newCanvasH.id='chartHistSeason';
+    oldCanvasH.parentNode.replaceChild(newCanvasH,oldCanvasH);
+    const hctx=newCanvasH.getContext('2d');
     if(chartHist)chartHist.destroy();
     const bgColors=hst.seasons.map(s=>{
       const t=s.total;
@@ -627,7 +645,12 @@ function renderAnalysis(){
     });
   }
 
-  const ctx=document.getElementById('chartMonthly').getContext('2d');
+  // Fix for Samsung mobile — replace canvas element to force reinitialise
+  const oldCanvas=document.getElementById('chartMonthly');
+  const newCanvas=document.createElement('canvas');
+  newCanvas.id='chartMonthly';
+  oldCanvas.parentNode.replaceChild(newCanvas,oldCanvas);
+  const ctx=newCanvas.getContext('2d');
   if(chartMo)chartMo.destroy();
   chartMo=new Chart(ctx,{type:'bar',data:{labels:st.moBreakdown.map(m=>m.label),datasets:[{label:'mm',data:st.moBreakdown.map(m=>m.total),backgroundColor:st.moBreakdown.map(m=>m.total>0?'#2d6a4f':'#e0ede4'),borderRadius:5,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw} mm`}}},scales:{x:{grid:{display:false},ticks:{font:{family:'Space Mono',size:9},maxRotation:45}},y:{grid:{color:'#f0f0ec'},ticks:{font:{family:'Space Mono',size:9}},beginAtZero:true}}}});
 }
