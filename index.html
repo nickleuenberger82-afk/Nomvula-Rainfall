@@ -293,6 +293,24 @@ input[type=number]{-moz-appearance:textfield}
         <div class="an-row"><span class="an-key">2026 rainy days</span><span class="an-val" id="anY2026Rain">—</span></div>
       </div>
 
+      <div class="analysis-card" style="margin-top:10px">
+        <div class="an-title">📜 Historical Season Totals (1996–present)</div>
+        <div id="histStatsBlock">
+          <div class="an-row"><span class="an-key">Seasons on record</span><span class="an-val" id="anHistCount">—</span></div>
+          <div class="an-row"><span class="an-key">Long-term average</span><span class="an-val" id="anHistAvg">—</span></div>
+          <div class="an-row"><span class="an-key">Wettest season</span><span class="an-val" id="anHistWet">—</span></div>
+          <div class="an-row"><span class="an-key">Driest season</span><span class="an-val" id="anHistDry">—</span></div>
+          <div class="an-row"><span class="an-key">Highest season total</span><span class="an-val" id="anHistMax">—</span></div>
+          <div class="an-row"><span class="an-key">Lowest season total</span><span class="an-val" id="anHistMin">—</span></div>
+          <div class="an-row"><span class="an-key">Std deviation</span><span class="an-val" id="anHistStd">—</span></div>
+          <div class="an-row"><span class="an-key">Seasons above avg</span><span class="an-val" id="anHistAbove">—</span></div>
+          <div class="an-row"><span class="an-key">Seasons below avg</span><span class="an-val" id="anHistBelow">—</span></div>
+          <div class="an-row"><span class="an-key">Current vs LT avg</span><span class="an-val" id="anHistVsAvg">—</span></div>
+        </div>
+        <div style="position:relative;height:200px;margin-top:14px"><canvas id="chartHistSeason"></canvas></div>
+        <div style="font-size:10px;color:var(--txt-soft);margin-top:8px;font-family:var(--mono);text-align:center">Import Historical Monthly CSV on the Export tab to populate this chart</div>
+      </div>
+
       <div class="analysis-card" style="margin-top:10px;margin-bottom:14px">
         <div class="an-title">🌧 All Records (app data)</div>
         <div class="an-row"><span class="an-key">Total entries</span><span class="an-val" id="anTotal">—</span></div>
@@ -311,11 +329,20 @@ input[type=number]{-moz-appearance:textfield}
     <div class="page" id="page-export">
       <div class="shdr">Import from Excel</div>
       <div class="exp-card">
-        <div class="exp-title">📥 Import CSV from Excel</div>
-        <div class="exp-desc">Export your Daily Log from Excel as CSV (File → Save As → CSV). Select that file here — data merges with no duplicates.</div>
-        <button class="exp-btn import-btn" onclick="document.getElementById('importFileInput').click()">Select CSV file to import</button>
+        <div class="exp-title">📥 Import Daily Log CSV</div>
+        <div class="exp-desc">Export your Daily Log sheet from Excel as CSV. Handles DD/MM/YYYY and YYYY-MM-DD date formats automatically.</div>
+        <button class="exp-btn import-btn" onclick="document.getElementById('importFileInput').click()">Select Daily Log CSV</button>
         <input type="file" id="importFileInput" accept=".csv,.txt" onchange="importCSV(event)">
         <div id="importResult" style="font-size:12px;color:var(--g3);margin-top:8px;font-family:var(--mono)"></div>
+      </div>
+
+      <div class="exp-card" style="margin-top:0">
+        <div class="exp-title">📥 Import Historical Monthly CSV</div>
+        <div class="exp-desc">Export your <strong>Historical Monthly</strong> sheet as CSV. Rows must be season format (e.g. 1996/97) with monthly columns Sep→Aug. This powers the long-term average and historical trends chart.</div>
+        <button class="exp-btn import-btn" onclick="document.getElementById('importHistInput').click()">Select Historical Monthly CSV</button>
+        <input type="file" id="importHistInput" accept=".csv,.txt" onchange="importHistCSV(event)">
+        <div id="importHistResult" style="font-size:12px;color:var(--g3);margin-top:8px;font-family:var(--mono)"></div>
+        <div class="csv-pre" id="prevHist">No historical data imported yet</div>
       </div>
 
       <div class="shdr">Export to Excel</div>
@@ -388,14 +415,14 @@ input[type=number]{-moz-appearance:textfield}
 
 <script>
 const REPO_OWNER='nickleuenberger82-afk',REPO_NAME='nomvula-rainfall',DATA_FILE='rainfall-data.json';
-const LOCAL_KEY='nomvula_v2',TOKEN_KEY='nomvula_ghp';
+const LOCAL_KEY='nomvula_v2',TOKEN_KEY='nomvula_ghp',HIST_KEY='nomvula_hist_v1';
 const LT_AVG=500;
 const SEASON_START=new Date('2025-09-01'),SEASON_END=new Date('2026-08-31');
 const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
 const MONTHS_S=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const DAYS_S=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const SEA_MONTHS=[{m:9,y:2025},{m:10,y:2025},{m:11,y:2025},{m:12,y:2025},{m:1,y:2026},{m:2,y:2026},{m:3,y:2026},{m:4,y:2026},{m:5,y:2026},{m:6,y:2026},{m:7,y:2026},{m:8,y:2026}];
-let chart7=null,chartMo=null,selectedEvent='';
+let chart7=null,chartMo=null,chartHist=null,selectedEvent='';
 
 function getToken(){return localStorage.getItem(TOKEN_KEY)||'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';}
 function saveToken(){const t=document.getElementById('tokenInp').value.trim();if(!t){showToast('Enter a token first');return;}localStorage.setItem(TOKEN_KEY,t);showToast('Token saved ✓');}
@@ -403,6 +430,8 @@ function loadLocal(){try{return JSON.parse(localStorage.getItem(LOCAL_KEY))||{};
 function saveLocal(d){localStorage.setItem(LOCAL_KEY,JSON.stringify(d));}
 function todayKey(){const t=new Date();return `${t.getFullYear()}-${pad(t.getMonth()+1)}-${pad(t.getDate())}`;}
 function pad(n){return String(n).padStart(2,'0');}
+function loadHist(){try{return JSON.parse(localStorage.getItem(HIST_KEY))||{};}catch{return {};}}
+function saveHist(d){localStorage.setItem(HIST_KEY,JSON.stringify(d));}
 function parseKey(k){const[y,m,d]=k.split('-').map(Number);return new Date(y,m-1,d);}
 function fmtDate(k){if(!k)return'—';const d=parseKey(k);return `${d.getDate()} ${MONTHS_S[d.getMonth()]} ${d.getFullYear()}`;}
 
@@ -550,6 +579,54 @@ function renderAnalysis(){
   set('anY2026',st.y2026?`${st.y2026} mm`:'—');set('anY2026Rain',st.y2026Rain?`${st.y2026Rain} days`:'—');
   set('anTotal',`${st.totalEntries} days`);set('anAllMax',st.allMax?`${st.allMax} mm`:'—');
   set('anAllMaxDate',st.allMaxKey?fmtDate(st.allMaxKey):'—');set('anAllTotal',st.allTotal?`${st.allTotal} mm`:'—');
+  // Historical seasons chart
+  const hist=loadHist();
+  const hst=computeHistStats(hist);
+  if(hst){
+    const set=(id,val,cls='')=>{const el=document.getElementById(id);if(el){el.textContent=val;if(cls)el.className=`an-val ${cls}`;}};
+    set('anHistCount',`${hst.count} seasons`);
+    set('anHistAvg',`${hst.avg} mm`);
+    set('anHistWet',`${hst.max.season} (${hst.max.total} mm)`,'green');
+    set('anHistDry',`${hst.min.season} (${hst.min.total} mm)`,'amber');
+    set('anHistMax',`${hst.max.total} mm`);
+    set('anHistMin',`${hst.min.total} mm`);
+    set('anHistStd',`± ${hst.std} mm`);
+    set('anHistAbove',`${hst.above} of ${hst.count}`,'green');
+    set('anHistBelow',`${hst.below} of ${hst.count}`,'amber');
+    const currSeason=st.seasonTotal;
+    const vsAvg=Math.round((currSeason-hst.avg)*10)/10;
+    set('anHistVsAvg',`${vsAvg>0?'+':''}${vsAvg} mm`,vsAvg>=0?'green':'amber');
+    // Update LT avg display
+    document.getElementById('cLTAvg').textContent=hst.avg;
+    // Update status banner to use real LT avg
+    const realPct=Math.round(currSeason/hst.avg*100);
+    document.getElementById('sPct').textContent=currSeason>0?`${realPct}%`:'—';
+    // Render historical bar chart
+    const hctx=document.getElementById('chartHistSeason').getContext('2d');
+    if(chartHist)chartHist.destroy();
+    const bgColors=hst.seasons.map(s=>{
+      const t=s.total;
+      if(t===0)return '#e0ede4';
+      if(t<400)return '#f1c40f';
+      if(t<600)return '#2d6a4f';
+      if(t<750)return '#e67e22';
+      return '#e74c3c';
+    });
+    // Mark current season differently
+    const labels=hst.seasons.map(s=>s.season);
+    const data=hst.seasons.map(s=>s.total);
+    // Add current 2025/26 if not already in hist
+    if(!hist['2025/26']&&currSeason>0){labels.push('2025/26★');data.push(currSeason);bgColors.push('#1a3a2a');}
+    chartHist=new Chart(hctx,{
+      type:'bar',
+      data:{labels,datasets:[
+        {label:'Season (mm)',data,backgroundColor:bgColors,borderRadius:3,borderSkipped:false},
+        {label:'LT Average',data:Array(labels.length).fill(hst.avg),type:'line',borderColor:'#e74c3c',borderWidth:2,borderDash:[4,4],pointRadius:0,fill:false}
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{font:{family:'Space Mono',size:9},boxWidth:12}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${c.raw} mm`}}},scales:{x:{grid:{display:false},ticks:{font:{family:'Space Mono',size:8},maxRotation:90}},y:{grid:{color:'#f0f0ec'},ticks:{font:{family:'Space Mono',size:9}},beginAtZero:false}}}
+    });
+  }
+
   const ctx=document.getElementById('chartMonthly').getContext('2d');
   if(chartMo)chartMo.destroy();
   chartMo=new Chart(ctx,{type:'bar',data:{labels:st.moBreakdown.map(m=>m.label),datasets:[{label:'mm',data:st.moBreakdown.map(m=>m.total),backgroundColor:st.moBreakdown.map(m=>m.total>0?'#2d6a4f':'#e0ede4'),borderRadius:5,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw} mm`}}},scales:{x:{grid:{display:false},ticks:{font:{family:'Space Mono',size:9},maxRotation:45}},y:{grid:{color:'#f0f0ec'},ticks:{font:{family:'Space Mono',size:9}},beginAtZero:true}}}});
@@ -655,6 +732,99 @@ async function deleteEntry(key){
   showToast('Deleted');renderHome();await pushToGitHub(data);
 }
 
+function importHistCSV(event){
+  const file=event.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=async e=>{
+    const lines=e.target.result.split('\n').map(l=>l.trim()).filter(Boolean);
+    const hist=loadHist();
+    let imported=0,skipped=0;
+    // Expected columns: Season,Sep,Oct,Nov,Dec,Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Season Total,...
+    // Season col = A (index 0), months = B-M (index 1-12)
+    const monthCols=[9,10,11,12,1,2,3,4,5,6,7,8]; // Sep→Aug month numbers
+    lines.forEach(line=>{
+      const cols=line.split(',').map(c=>c.trim());
+      if(!cols[0])return;
+      // Skip header rows
+      if(cols[0].toLowerCase().includes('season')&&isNaN(cols[0][0]))return;
+      if(cols[0].toLowerCase().includes('average'))return;
+      if(cols[0].toLowerCase().includes('total'))return;
+      // Parse season label e.g. 1996/97 or 1996/1997
+      const seasonMatch=cols[0].match(/(\d{4})[/\\](\d{2,4})/);
+      if(!seasonMatch){skipped++;return;}
+      const y1=parseInt(seasonMatch[1]);
+      const seasonKey=`${y1}/${String(y1+1).slice(2)}`;
+      if(!hist[seasonKey])hist[seasonKey]={};
+      let hasData=false;
+      monthCols.forEach((mo,i)=>{
+        const raw=(cols[i+1]||'').replace(/[^0-9.-]/g,'');
+        if(raw===''||raw==='-')return;
+        const val=parseFloat(raw);
+        if(!isNaN(val)&&val>=0){hist[seasonKey][mo]=Math.round(val*10)/10;hasData=true;}
+      });
+      if(hasData)imported++;else skipped++;
+    });
+    saveHist(hist);
+    const count=Object.keys(hist).length;
+    document.getElementById('importHistResult').textContent=`✓ Imported ${imported} seasons (${count} total on record). ${skipped} rows skipped.`;
+    updateHistPreview(hist);
+    showToast(`Imported ${imported} seasons`);
+    // Push hist to GitHub as separate file
+    await pushHistToGitHub(hist);
+    renderAnalysis();
+  };
+  reader.readAsText(file);event.target.value='';
+}
+
+function updateHistPreview(hist){
+  const seasons=Object.keys(hist).sort();
+  if(!seasons.length){document.getElementById('prevHist').textContent='No historical data imported yet';return;}
+  const lines=[`Season,Sep,Oct,Nov,Dec,Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Total`];
+  const mo=[9,10,11,12,1,2,3,4,5,6,7,8];
+  seasons.slice(-5).forEach(sk=>{
+    const vals=mo.map(m=>(hist[sk][m]!==undefined?hist[sk][m]:''));
+    const tot=mo.reduce((s,m)=>s+(hist[sk][m]||0),0);
+    lines.push(`${sk},${vals.join(',')},${Math.round(tot*10)/10}`);
+  });
+  document.getElementById('prevHist').textContent=`Last ${Math.min(5,seasons.length)} seasons:\n`+lines.join('\n');
+}
+
+async function pushHistToGitHub(hist){
+  try{
+    const HIST_FILE='rainfall-history.json';
+    const getRes=await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${HIST_FILE}`,{headers:{Authorization:`token ${getToken()}`,Accept:'application/vnd.github.v3+json'}});
+    const body={message:`Update historical data ${new Date().toISOString().slice(0,10)}`,content:btoa(unescape(encodeURIComponent(JSON.stringify(hist,null,2))))};
+    if(getRes.ok){const j=await getRes.json();body.sha=j.sha;}
+    await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${HIST_FILE}`,{method:'PUT',headers:{Authorization:`token ${getToken()}`,'Content-Type':'application/json',Accept:'application/vnd.github.v3+json'},body:JSON.stringify(body)});
+    console.log('Historical data pushed to GitHub');
+  }catch(e){console.error('Hist push failed',e);}
+}
+
+async function fetchHistFromGitHub(){
+  try{
+    const res=await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/rainfall-history.json`,{headers:{Authorization:`token ${getToken()}`,Accept:'application/vnd.github.v3+json'}});
+    if(!res.ok)return null;
+    const json=await res.json();
+    return JSON.parse(atob(json.content.replace(/\n/g,'')));
+  }catch(e){return null;}
+}
+
+function computeHistStats(hist){
+  const seasons=Object.keys(hist).sort();
+  if(!seasons.length)return null;
+  const mo=[9,10,11,12,1,2,3,4,5,6,7,8];
+  const totals=seasons.map(sk=>({season:sk,total:Math.round(mo.reduce((s,m)=>s+(hist[sk][m]||0),0)*10)/10}));
+  const vals=totals.map(t=>t.total).filter(v=>v>0);
+  if(!vals.length)return null;
+  const avg=Math.round(vals.reduce((s,v)=>s+v,0)/vals.length*10)/10;
+  const max=totals.reduce((b,t)=>t.total>b.total?t:b,{total:-1,season:''});
+  const min=totals.filter(t=>t.total>0).reduce((b,t)=>t.total<b.total?t:b,{total:Infinity,season:''});
+  const std=Math.round(Math.sqrt(vals.reduce((s,v)=>s+Math.pow(v-avg,2),0)/vals.length)*10)/10;
+  const above=vals.filter(v=>v>avg).length;
+  const below=vals.filter(v=>v<avg).length;
+  return{seasons:totals,avg,max,min,std,above,below,count:vals.length};
+}
+
 function renderSettings(){
   document.getElementById('setRecords').textContent=Object.keys(loadLocal()).length;
   document.getElementById('setLastSync').textContent=localStorage.getItem('nomvula_lastSync')||'Never';
@@ -684,6 +854,9 @@ async function init(){
     const remote=await fetchFromGitHub();
     if(remote&&remote.data){const local=loadLocal();const merged={...remote.data,...local};saveLocal(merged);const now=new Date().toLocaleTimeString();localStorage.setItem('nomvula_lastSync',now);setSyncStatus('ok',`Synced ${now}`);}
     else setSyncStatus('ok','Ready');
+    // Also load historical data from GitHub
+    const remoteHist=await fetchHistFromGitHub();
+    if(remoteHist){const localHist=loadHist();const mergedHist={...remoteHist,...localHist};saveHist(mergedHist);}
   }catch(e){setSyncStatus('error','Offline — using local data');}
   renderHome();
   document.getElementById('loadingScreen').style.display='none';
