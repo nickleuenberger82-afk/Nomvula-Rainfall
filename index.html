@@ -111,7 +111,7 @@ input[type=number]{-moz-appearance:textfield}
 
 /* 7-DAY CHART */
 .chart-card{background:var(--white);margin:0 14px;border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
-.chart-wrap{position:relative;height:120px}
+.chart-wrap{position:relative;height:120px;min-height:120px;overflow:visible}
 
 /* LOG */
 .log-wrap{margin:0 14px}
@@ -133,7 +133,7 @@ input[type=number]{-moz-appearance:textfield}
 .an-key{font-size:13px;color:var(--txt-mid)}
 .an-val{font-size:13px;font-weight:600;font-family:var(--mono);color:var(--g2)}
 .an-val.green{color:#27ae60}.an-val.amber{color:#d4a017}.an-val.orange{color:#e67e22}.an-val.red{color:#e74c3c}
-.month-chart-wrap{position:relative;height:180px;margin-top:12px}
+.month-chart-wrap{position:relative;height:180px;margin-top:12px;min-height:180px;overflow:visible}
 
 /* HISTORY */
 .month-block{margin:0 14px 14px}
@@ -557,9 +557,9 @@ function render7DayChart(data){
     isToday.push(i===0);
   }
   const max=Math.max(...values,1);
-  const W=el.offsetWidth||320, H=110, pad_l=28, pad_b=22, pad_t=8;
+  const W=320, H=110, pad_l=28, pad_b=22, pad_t=8;
   const chartW=W-pad_l-4, barW=Math.floor(chartW/7)-4;
-  let svg=`<svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
+  let svg=`<svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">`;
   // Y gridlines
   for(let g=0;g<=4;g++){
     const y=pad_t+(H-pad_b-pad_t)*(1-g/4);
@@ -578,6 +578,7 @@ function render7DayChart(data){
   });
   svg+='</svg>';
   el.innerHTML=svg;
+    {const _s=el.querySelector('svg');if(_s){_s.style.cssText='display:block;width:100%;overflow:visible;';}}
 }
 
 function renderRecentLog(data){
@@ -639,10 +640,10 @@ function renderAnalysis(){
       // Add current season if not in hist
       if(!hist['2025/26']&&currSeason>0){labels.push('2025/26');values.push(currSeason);}
       const max=Math.max(...values,hst.avg,1);
-      const W=el.offsetWidth||320, H=210, pad_l=40, pad_b=44, pad_t=12;
+      const W=320, H=210, pad_l=40, pad_b=44, pad_t=12;
       const chartW=W-pad_l-4, n=labels.length;
       const barW=Math.max(6,Math.floor(chartW/n)-3);
-      let svg=`<svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
+      let svg=`<svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">`;
       // Gridlines
       for(let g=0;g<=4;g++){
         const y=pad_t+(H-pad_b-pad_t)*(1-g/4);
@@ -671,6 +672,7 @@ function renderAnalysis(){
       });
       svg+='</svg>';
       el.innerHTML=svg;
+    {const _s=el.querySelector('svg');if(_s){_s.style.cssText='display:block;width:100%;overflow:visible;';}}
     })();;
     // Mark current season differently
     const labels=hst.seasons.map(s=>s.season);
@@ -905,7 +907,7 @@ function showPage(name){
   const nb=document.getElementById('nav-'+name);if(nb)nb.classList.add('active');
   document.getElementById('mainScroll').scrollTop=0;
   if(name==='history')renderHistory();
-  if(name==='analysis')renderAnalysis();
+  if(name==='analysis')requestAnimationFrame(()=>requestAnimationFrame(renderAnalysis));
   if(name==='export')renderExportPreviews();
   if(name==='settings')renderSettings();
 }
@@ -937,9 +939,9 @@ init();
     const labels=st.moBreakdown.map(m=>m.label);
     const values=st.moBreakdown.map(m=>m.total);
     const max=Math.max(...values,1);
-    const W=el.offsetWidth||320, H=170, pad_l=36, pad_b=40, pad_t=12;
+    const W=320, H=170, pad_l=36, pad_b=40, pad_t=12;
     const chartW=W-pad_l-4, n=labels.length, barW=Math.max(8,Math.floor(chartW/n)-4);
-    let svg=`<svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
+    let svg=`<svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">`;
     for(let g=0;g<=4;g++){
       const y=pad_t+(H-pad_b-pad_t)*(1-g/4);
       const val=Math.round(max*g/4);
@@ -958,6 +960,7 @@ init();
     });
     svg+='</svg>';
     el.innerHTML=svg;
+    {const _s=el.querySelector('svg');if(_s){_s.style.cssText='display:block;width:100%;overflow:visible;';}}
   })();*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;font-family:var(--font);background:var(--g1);color:var(--txt);overflow:hidden}
 input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
@@ -1045,7 +1048,7 @@ input[type=number]{-moz-appearance:textfield}
 
 /* 7-DAY CHART */
 .chart-card{background:var(--white);margin:0 14px;border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
-.chart-wrap{position:relative;height:120px}
+.chart-wrap{position:relative;height:120px;min-height:120px;overflow:visible}
 
 /* LOG */
 .log-wrap{margin:0 14px}
@@ -1067,7 +1070,7 @@ input[type=number]{-moz-appearance:textfield}
 .an-key{font-size:13px;color:var(--txt-mid)}
 .an-val{font-size:13px;font-weight:600;font-family:var(--mono);color:var(--g2)}
 .an-val.green{color:#27ae60}.an-val.amber{color:#d4a017}.an-val.orange{color:#e67e22}.an-val.red{color:#e74c3c}
-.month-chart-wrap{position:relative;height:180px;margin-top:12px}
+.month-chart-wrap{position:relative;height:180px;margin-top:12px;min-height:180px;overflow:visible}
 
 /* HISTORY */
 .month-block{margin:0 14px 14px}
@@ -1491,9 +1494,9 @@ function render7DayChart(data){
     isToday.push(i===0);
   }
   const max=Math.max(...values,1);
-  const W=el.offsetWidth||320, H=110, pad_l=28, pad_b=22, pad_t=8;
+  const W=320, H=110, pad_l=28, pad_b=22, pad_t=8;
   const chartW=W-pad_l-4, barW=Math.floor(chartW/7)-4;
-  let svg=`<svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
+  let svg=`<svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">`;
   // Y gridlines
   for(let g=0;g<=4;g++){
     const y=pad_t+(H-pad_b-pad_t)*(1-g/4);
@@ -1512,6 +1515,7 @@ function render7DayChart(data){
   });
   svg+='</svg>';
   el.innerHTML=svg;
+    {const _s=el.querySelector('svg');if(_s){_s.style.cssText='display:block;width:100%;overflow:visible;';}}
 }
 
 function renderRecentLog(data){
@@ -1811,7 +1815,7 @@ function showPage(name){
   const nb=document.getElementById('nav-'+name);if(nb)nb.classList.add('active');
   document.getElementById('mainScroll').scrollTop=0;
   if(name==='history')renderHistory();
-  if(name==='analysis')renderAnalysis();
+  if(name==='analysis')requestAnimationFrame(()=>requestAnimationFrame(renderAnalysis));
   if(name==='export')renderExportPreviews();
   if(name==='settings')renderSettings();
 }
