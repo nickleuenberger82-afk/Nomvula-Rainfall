@@ -3,875 +3,663 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#1B4332">
+<meta name="theme-color" content="#1a3a2a">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Nomvula Rain">
 <title>Nomvula Rainfall — Klaserie</title>
 <link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+:root {
+  --g1:#0d2318;--g2:#1a3a2a;--g3:#2d6a4f;--g4:#52b788;--g5:#95d5b2;
+  --cream:#f4f0e0;--sand:#e8e0c8;--white:#ffffff;
+  --amber:#f4a261;--coral:#e76f51;--gold:#d4a017;
+  --blue:#2e6096;--blue-l:#d6e4f0;
+  --danger:#c0392b;--danger-l:#fadbd8;
+  --txt:#1a1a1a;--txt-mid:#4a4a4a;--txt-soft:#8d8d8d;
+  --radius:18px;--radius-sm:12px;
+  --shadow:0 4px 20px rgba(0,0,0,0.08);--shadow-lg:0 8px 32px rgba(0,0,0,0.14);
+  --safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px);
+  --font:'Outfit',sans-serif;--mono:'Space Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;font-family:var(--font);background:var(--g1);color:var(--txt);overflow:hidden}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
+input[type=number]{-moz-appearance:textfield}
+#app{height:100%;display:flex;flex-direction:column;max-width:430px;margin:0 auto;position:relative;overflow:hidden}
 
-  :root {
-    --green-dark: #1B4332;
-    --green-mid: #2D6A4F;
-    --green-light: #52B788;
-    --green-pale: #D8F3DC;
-    --amber: #F4A261;
-    --amber-dark: #E76F51;
-    --cream: #F8F4E3;
-    --white: #FFFFFF;
-    --grey-light: #F0F0EC;
-    --grey-mid: #8D8D8D;
-    --text-dark: #1A1A1A;
-    --text-mid: #4A4A4A;
-    --status-green: #2D9E5F;
-    --status-yellow: #D4A017;
-    --status-orange: #E07B22;
-    --status-red: #C0392B;
-    --radius: 16px;
-    --radius-sm: 10px;
-    --safe-top: env(safe-area-inset-top, 0px);
-    --safe-bottom: env(safe-area-inset-bottom, 0px);
-  }
+/* TOP BAR */
+.topbar{background:linear-gradient(180deg,var(--g1) 0%,var(--g2) 100%);padding:calc(var(--safe-top) + 14px) 20px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;z-index:10}
+.topbar-brand{display:flex;align-items:center;gap:10px}
+.topbar-icon{width:36px;height:36px;border-radius:10px;background:var(--g3);display:flex;align-items:center;justify-content:center;font-size:18px}
+.topbar-name{font-size:16px;font-weight:700;color:var(--white);letter-spacing:-0.3px}
+.topbar-loc{font-size:11px;color:rgba(255,255,255,0.5);font-family:var(--mono);margin-top:1px}
+.topbar-actions{display:flex;gap:8px}
+.icon-btn{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.1);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--white);font-size:16px;transition:background 0.15s}
+.icon-btn:active{background:rgba(255,255,255,0.2)}
 
-  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+/* SYNC BAR */
+.sync-bar{background:rgba(255,255,255,0.06);padding:6px 20px;display:flex;align-items:center;gap:6px;flex-shrink:0}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--g4);flex-shrink:0}
+.sync-dot.syncing{background:var(--amber);animation:pulse 1s infinite}
+.sync-dot.error{background:var(--coral)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+.sync-txt{font-size:11px;color:rgba(255,255,255,0.5);font-family:var(--mono);flex:1}
+.sync-btn{font-size:10px;color:var(--g4);background:none;border:none;cursor:pointer;font-family:var(--mono);padding:2px 6px;border-radius:4px}
 
-  html, body {
-    height: 100%;
-    font-family: 'DM Sans', sans-serif;
-    background: var(--green-dark);
-    color: var(--text-dark);
-    overflow: hidden;
-  }
+/* SCROLL */
+.scroll-area{flex:1;overflow-y:auto;overflow-x:hidden;background:#f0ede4;border-radius:24px 24px 0 0;padding-bottom:calc(var(--safe-bottom) + 76px);-webkit-overflow-scrolling:touch}
 
-  #app {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    max-width: 430px;
-    margin: 0 auto;
-    position: relative;
-    overflow: hidden;
-  }
+/* BOTTOM NAV */
+.bottom-nav{position:absolute;bottom:0;left:0;right:0;background:var(--white);padding:8px 0 calc(var(--safe-bottom) + 4px);display:flex;justify-content:space-around;border-top:1px solid rgba(0,0,0,0.07);z-index:20}
+.nav-btn{display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:none;cursor:pointer;padding:4px 16px;border-radius:10px;color:var(--txt-soft);font-size:10px;font-weight:500;min-width:56px;transition:color 0.15s}
+.nav-btn.active{color:var(--g2)}
+.nav-icon{font-size:22px;line-height:1}
+.nav-pip{width:4px;height:4px;border-radius:50%;background:var(--g3);margin:0 auto;opacity:0}
+.nav-btn.active .nav-pip{opacity:1}
 
-  /* ── TOP BAR ── */
-  .topbar {
-    background: var(--green-dark);
-    padding: calc(var(--safe-top) + 12px) 20px 12px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-shrink: 0;
-    z-index: 10;
-  }
-  .topbar-title { font-size: 17px; font-weight: 600; color: #fff; letter-spacing: -0.3px; }
-  .topbar-sub { font-size: 12px; color: rgba(255,255,255,0.6); margin-top: 1px; font-family: 'DM Mono', monospace; }
-  .icon-btn {
-    width: 38px; height: 38px; border-radius: 50%;
-    background: rgba(255,255,255,0.12);
-    border: none; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    color: #fff; font-size: 18px; transition: background 0.15s;
-    flex-shrink: 0;
-  }
-  .icon-btn:active { background: rgba(255,255,255,0.22); }
+/* PAGES */
+.page{display:none}.page.active{display:block}
 
-  /* ── SCROLL AREA ── */
-  .scroll-area {
-    flex: 1;
-    overflow-y: auto;
-    overflow-x: hidden;
-    background: var(--grey-light);
-    border-radius: 24px 24px 0 0;
-    padding-bottom: calc(var(--safe-bottom) + 80px);
-    -webkit-overflow-scrolling: touch;
-  }
+/* HERO / RECORD */
+.hero{background:linear-gradient(145deg,var(--g2),var(--g1));margin:14px 14px 0;border-radius:var(--radius);padding:20px;box-shadow:var(--shadow-lg);overflow:hidden;position:relative}
+.hero::before{content:'';position:absolute;top:-40px;right:-40px;width:160px;height:160px;border-radius:50%;background:rgba(82,183,136,0.08)}
+.hero-date{font-size:12px;color:rgba(255,255,255,0.45);font-family:var(--mono);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px}
+.hero-today{font-size:13px;font-weight:500;color:rgba(255,255,255,0.7);margin-bottom:16px}
+.rain-row{display:flex;align-items:center;gap:10px}
+.rain-wrap{flex:1;position:relative}
+.rain-input{width:100%;height:72px;border:2px solid rgba(82,183,136,0.25);border-radius:var(--radius-sm);font-size:36px;font-weight:700;font-family:var(--mono);color:var(--white);text-align:center;background:rgba(255,255,255,0.06);outline:none;transition:border-color 0.2s;caret-color:var(--g4)}
+.rain-input::placeholder{color:rgba(255,255,255,0.2)}
+.rain-input:focus{border-color:var(--g4);background:rgba(255,255,255,0.1)}
+.rain-unit-lbl{font-size:12px;color:rgba(255,255,255,0.4);font-family:var(--mono);position:absolute;bottom:10px;right:12px}
+.save-btn{width:72px;height:72px;border-radius:var(--radius-sm);background:linear-gradient(135deg,var(--g4),var(--g3));border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--white);font-size:28px;flex-shrink:0;box-shadow:0 4px 16px rgba(82,183,136,0.4);transition:transform 0.1s}
+.save-btn:active{transform:scale(0.93)}
+.quick-row{display:flex;gap:6px;margin-top:10px}
+.qbtn{flex:1;height:34px;border-radius:8px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.07);cursor:pointer;font-size:12px;font-weight:600;color:rgba(255,255,255,0.7);font-family:var(--mono);transition:background 0.15s}
+.qbtn:active{background:rgba(255,255,255,0.18)}
+.event-row{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.echip{height:28px;padding:0 10px;border-radius:20px;border:1px solid rgba(255,255,255,0.15);background:transparent;font-size:11px;font-weight:500;color:rgba(255,255,255,0.6);cursor:pointer;transition:all 0.15s;white-space:nowrap;font-family:var(--font)}
+.echip.active{background:var(--g4);color:var(--g1);border-color:var(--g4)}
+.notes-inp{width:100%;margin-top:10px;border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:8px 12px;font-size:13px;font-family:var(--font);color:var(--white);background:rgba(255,255,255,0.07);outline:none;resize:none;height:48px}
+.notes-inp::placeholder{color:rgba(255,255,255,0.25)}
+.notes-inp:focus{border-color:rgba(82,183,136,0.5)}
 
-  /* ── TODAY HERO CARD ── */
-  .hero-card {
-    background: var(--white);
-    margin: 16px 16px 0;
-    border-radius: var(--radius);
-    padding: 20px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
-  }
-  .hero-date {
-    font-size: 13px; color: var(--grey-mid);
-    font-family: 'DM Mono', monospace;
-    text-transform: uppercase; letter-spacing: 0.5px;
-    margin-bottom: 4px;
-  }
-  .hero-label { font-size: 15px; font-weight: 500; color: var(--text-dark); margin-bottom: 16px; }
+/* CARDS */
+.cards-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 14px 0}
+.card{background:var(--white);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
+.card-lbl{font-size:10px;font-weight:600;color:var(--txt-soft);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
+.card-val{font-size:28px;font-weight:700;font-family:var(--mono);color:var(--g2);line-height:1}
+.card-unit{font-size:12px;color:var(--txt-soft);font-family:var(--mono)}
+.card-sub{font-size:11px;color:var(--txt-soft);margin-top:4px}
 
-  .rain-input-row {
-    display: flex; align-items: center; gap: 12px;
-  }
-  .rain-input-wrap {
-    flex: 1; position: relative;
-  }
-  .rain-input {
-    width: 100%; height: 64px;
-    border: 2px solid var(--green-pale);
-    border-radius: var(--radius-sm);
-    font-size: 32px; font-weight: 500;
-    font-family: 'DM Mono', monospace;
-    color: var(--green-dark);
-    text-align: center;
-    background: var(--cream);
-    outline: none;
-    transition: border-color 0.2s;
-    -webkit-appearance: none;
-  }
-  .rain-input:focus { border-color: var(--green-light); background: #fff; }
-  .rain-unit {
-    font-size: 13px; color: var(--grey-mid);
-    font-family: 'DM Mono', monospace;
-    position: absolute; bottom: 8px; right: 10px;
-  }
-  .save-btn {
-    width: 64px; height: 64px; border-radius: var(--radius-sm);
-    background: var(--green-mid); border: none; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    color: #fff; font-size: 26px; flex-shrink: 0;
-    transition: background 0.15s, transform 0.1s;
-    box-shadow: 0 3px 10px rgba(45,106,79,0.35);
-  }
-  .save-btn:active { background: var(--green-dark); transform: scale(0.95); }
+/* STATUS */
+.status-banner{margin:12px 14px 0;border-radius:var(--radius);padding:16px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow)}
+.s-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0}
+.s-text{flex:1}.s-title{font-size:14px;font-weight:700}.s-desc{font-size:12px;margin-top:2px;opacity:0.75}
+.s-pct{font-size:22px;font-weight:700;font-family:var(--mono);flex-shrink:0}
+.s-average{background:#d4edda;color:#145a32}.s-average .s-dot{background:#27ae60}
+.s-below{background:#fef9e7;color:#7d6608}.s-below .s-dot{background:#f1c40f}
+.s-above{background:#fdebd0;color:#784212}.s-above .s-dot{background:#e67e22}
+.s-extreme{background:#fadbd8;color:#78281f}.s-extreme .s-dot{background:#e74c3c}
+.s-nodata{background:#f0f0ee;color:var(--txt-soft)}.s-nodata .s-dot{background:#ccc}
 
-  .quick-btns {
-    display: flex; gap: 8px; margin-top: 12px;
-  }
-  .quick-btn {
-    flex: 1; height: 36px; border-radius: 8px;
-    border: 1.5px solid var(--green-pale);
-    background: transparent; cursor: pointer;
-    font-size: 13px; font-weight: 500; color: var(--green-mid);
-    font-family: 'DM Mono', monospace;
-    transition: all 0.15s;
-  }
-  .quick-btn:active { background: var(--green-pale); }
+/* SECTION HDR */
+.shdr{font-size:11px;font-weight:700;color:var(--txt-soft);text-transform:uppercase;letter-spacing:0.8px;padding:18px 14px 8px;display:flex;align-items:center;justify-content:space-between}
+.shdr-action{font-size:11px;font-weight:600;color:var(--g3);text-transform:none;letter-spacing:0;background:none;border:none;cursor:pointer}
 
-  /* ── EVENT TYPE ── */
-  .event-row {
-    display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap;
-  }
-  .event-chip {
-    height: 30px; padding: 0 12px; border-radius: 20px;
-    border: 1.5px solid #ddd; background: transparent;
-    font-size: 12px; font-weight: 500; color: var(--text-mid);
-    cursor: pointer; transition: all 0.15s; white-space: nowrap;
-  }
-  .event-chip.active {
-    background: var(--green-dark); color: #fff; border-color: var(--green-dark);
-  }
-  .event-chip:active { opacity: 0.7; }
+/* 7-DAY CHART */
+.chart-card{background:var(--white);margin:0 14px;border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
+.chart-wrap{position:relative;height:120px}
 
-  /* ── STAT CARDS ── */
-  .stats-row {
-    display: grid; grid-template-columns: 1fr 1fr;
-    gap: 10px; margin: 12px 16px 0;
-  }
-  .stat-card {
-    background: var(--white); border-radius: var(--radius);
-    padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-  }
-  .stat-label { font-size: 11px; color: var(--grey-mid); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px; }
-  .stat-value { font-size: 26px; font-weight: 600; font-family: 'DM Mono', monospace; color: var(--green-dark); line-height: 1; }
-  .stat-unit { font-size: 12px; color: var(--grey-mid); font-family: 'DM Mono', monospace; }
-  .stat-sub { font-size: 11px; color: var(--grey-mid); margin-top: 4px; }
+/* LOG */
+.log-wrap{margin:0 14px}
+.log-item{background:var(--white);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;box-shadow:0 1px 4px rgba(0,0,0,0.05)}
+.log-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.log-info{flex:1}
+.log-date{font-size:12px;font-family:var(--mono);color:var(--txt-mid)}
+.log-ev{font-size:11px;color:var(--txt-soft);margin-top:2px}
+.log-mm{font-size:20px;font-weight:700;font-family:var(--mono);color:var(--g2)}
+.log-u{font-size:10px;color:var(--txt-soft);font-family:var(--mono)}
+.del-btn{width:28px;height:28px;border-radius:50%;background:#fff0f0;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--danger);font-size:13px;flex-shrink:0}
+.del-btn:active{background:var(--danger-l)}
 
-  /* ── STATUS BANNER ── */
-  .status-banner {
-    margin: 12px 16px 0;
-    border-radius: var(--radius);
-    padding: 14px 16px;
-    display: flex; align-items: center; gap: 12px;
-  }
-  .status-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
-  .status-text-wrap { flex: 1; }
-  .status-title { font-size: 13px; font-weight: 600; }
-  .status-desc { font-size: 12px; margin-top: 2px; opacity: 0.8; }
-  .status-pct { font-size: 18px; font-weight: 700; font-family: 'DM Mono', monospace; flex-shrink: 0; }
+/* ANALYSIS */
+.analysis-card{background:var(--white);margin:10px 14px 0;border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
+.an-title{font-size:14px;font-weight:700;color:var(--txt);margin-bottom:14px}
+.an-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #f0f0ec}
+.an-row:last-child{border-bottom:none}
+.an-key{font-size:13px;color:var(--txt-mid)}
+.an-val{font-size:13px;font-weight:600;font-family:var(--mono);color:var(--g2)}
+.an-val.green{color:#27ae60}.an-val.amber{color:#d4a017}.an-val.orange{color:#e67e22}.an-val.red{color:#e74c3c}
+.month-chart-wrap{position:relative;height:180px;margin-top:12px}
 
-  .s-average   { background: #D4EDDA; color: #145A32; }
-  .s-average .status-dot   { background: #27AE60; }
-  .s-below     { background: #FEF9E7; color: #7D6608; }
-  .s-below .status-dot     { background: #F1C40F; }
-  .s-above     { background: #FDEBD0; color: #784212; }
-  .s-above .status-dot     { background: #E67E22; }
-  .s-extreme   { background: #FADBD8; color: #78281F; }
-  .s-extreme .status-dot   { background: #E74C3C; }
-  .s-nodata    { background: var(--grey-light); color: var(--grey-mid); }
-  .s-nodata .status-dot    { background: var(--grey-mid); }
+/* HISTORY */
+.month-block{margin:0 14px 14px}
+.month-hdr{font-size:14px;font-weight:700;color:var(--g2);padding:14px 0 8px;border-bottom:2px solid var(--g5);margin-bottom:8px;display:flex;justify-content:space-between;align-items:baseline}
+.month-total-lbl{font-size:12px;font-family:var(--mono);color:var(--txt-soft)}
 
-  /* ── SECTION HEADERS ── */
-  .section-hdr {
-    font-size: 12px; font-weight: 600; color: var(--grey-mid);
-    text-transform: uppercase; letter-spacing: 0.6px;
-    padding: 18px 16px 6px;
-  }
+/* EXPORT */
+.exp-card{background:var(--white);margin:10px 14px 0;border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
+.exp-title{font-size:14px;font-weight:700;color:var(--txt);margin-bottom:4px}
+.exp-desc{font-size:12px;color:var(--txt-soft);line-height:1.5;margin-bottom:14px}
+.exp-btn{width:100%;height:46px;border-radius:10px;border:none;cursor:pointer;font-size:14px;font-weight:600;font-family:var(--font);margin-bottom:8px;transition:all 0.15s}
+.exp-btn.primary{background:var(--g3);color:var(--white);box-shadow:0 3px 10px rgba(45,106,79,0.3)}
+.exp-btn.primary:active{background:var(--g2);transform:scale(0.98)}
+.exp-btn.secondary{background:#f0f0ec;color:var(--txt);border:1.5px solid #ddd}
+.exp-btn.secondary:active{background:#e4e4e0}
+.exp-btn.import-btn{background:linear-gradient(135deg,var(--blue),#1a3a5c);color:var(--white)}
+.exp-btn.import-btn:active{opacity:0.9;transform:scale(0.98)}
+.csv-pre{background:#f4f0e0;border-radius:8px;padding:10px;font-size:10px;font-family:var(--mono);color:var(--txt-mid);overflow-x:auto;white-space:pre;line-height:1.6;max-height:130px;overflow-y:auto;margin-top:10px}
+#importFileInput{display:none}
 
-  /* ── RECENT LOG ── */
-  .log-list { margin: 0 16px; }
-  .log-item {
-    background: var(--white); border-radius: var(--radius-sm);
-    padding: 12px 14px; margin-bottom: 8px;
-    display: flex; align-items: center; gap: 12px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-  }
-  .log-dot {
-    width: 10px; height: 10px; border-radius: 50%;
-    flex-shrink: 0;
-  }
-  .log-date { font-size: 13px; color: var(--grey-mid); font-family: 'DM Mono', monospace; flex: 1; }
-  .log-event { font-size: 11px; color: var(--grey-mid); margin-top: 2px; }
-  .log-mm { font-size: 18px; font-weight: 600; font-family: 'DM Mono', monospace; color: var(--green-dark); }
-  .log-unit-s { font-size: 11px; color: var(--grey-mid); }
-  .log-del {
-    width: 28px; height: 28px; border-radius: 50%;
-    background: #FFF0F0; border: none; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    color: #C0392B; font-size: 14px; flex-shrink: 0;
-  }
-  .log-del:active { background: #FAD7D7; }
+/* SETTINGS */
+.set-card{background:var(--white);margin:10px 14px 0;border-radius:var(--radius);padding:0;box-shadow:var(--shadow);overflow:hidden}
+.set-row{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid #f0f0ec}
+.set-row:last-child{border-bottom:none}
+.set-key{font-size:13px;color:var(--txt-mid)}
+.set-val{font-size:13px;font-weight:600;font-family:var(--mono);color:var(--g2)}
+.danger-btn{width:calc(100% - 28px);margin:10px 14px;height:44px;border-radius:10px;border:1.5px solid var(--danger-l);background:transparent;color:var(--danger);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font)}
+.danger-btn:active{background:var(--danger-l)}
+.token-inp{width:100%;border:1.5px solid #eee;border-radius:8px;padding:8px 12px;font-size:12px;font-family:var(--mono);color:var(--txt);background:#f4f0e0;outline:none;margin-top:8px}
+.token-inp:focus{border-color:var(--g4)}
 
-  /* ── BOTTOM NAV ── */
-  .bottom-nav {
-    position: absolute; bottom: 0; left: 0; right: 0;
-    background: var(--white);
-    padding: 8px 0 calc(var(--safe-bottom) + 6px);
-    display: flex; justify-content: space-around;
-    border-top: 1px solid rgba(0,0,0,0.08);
-    z-index: 20;
-  }
-  .nav-btn {
-    display: flex; flex-direction: column; align-items: center; gap: 3px;
-    background: none; border: none; cursor: pointer;
-    padding: 4px 20px; border-radius: 8px;
-    color: var(--grey-mid); font-size: 10px; font-weight: 500;
-    transition: color 0.15s;
-    min-width: 60px;
-  }
-  .nav-btn.active { color: var(--green-dark); }
-  .nav-icon { font-size: 22px; line-height: 1; }
+/* TOAST */
+.toast{position:absolute;top:90px;left:50%;transform:translateX(-50%) translateY(-10px);background:var(--g1);color:var(--white);padding:10px 20px;border-radius:20px;font-size:13px;font-weight:500;opacity:0;transition:opacity 0.3s,transform 0.3s;pointer-events:none;z-index:200;white-space:nowrap;box-shadow:var(--shadow-lg)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-  /* ── PAGES ── */
-  .page { display: none; }
-  .page.active { display: block; }
+/* EMPTY */
+.empty{text-align:center;padding:48px 24px;color:var(--txt-soft)}
+.empty-icon{font-size:44px;margin-bottom:12px}
+.empty-t{font-size:15px;font-weight:600;color:var(--txt-mid);margin-bottom:6px}
+.empty-d{font-size:13px;line-height:1.5}
 
-  /* ── HISTORY PAGE ── */
-  .month-section { margin: 0 16px 16px; }
-  .month-hdr {
-    font-size: 14px; font-weight: 600; color: var(--green-dark);
-    padding: 14px 0 8px; border-bottom: 1px solid #eee; margin-bottom: 8px;
-    display: flex; justify-content: space-between; align-items: baseline;
-  }
-  .month-total { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--grey-mid); }
-
-  /* ── EXPORT PAGE ── */
-  .export-card {
-    background: var(--white); margin: 12px 16px; border-radius: var(--radius);
-    padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-  }
-  .export-title { font-size: 15px; font-weight: 600; color: var(--text-dark); margin-bottom: 6px; }
-  .export-desc { font-size: 13px; color: var(--grey-mid); line-height: 1.5; margin-bottom: 16px; }
-  .export-btn {
-    width: 100%; height: 48px; border-radius: 12px;
-    border: none; cursor: pointer;
-    font-size: 15px; font-weight: 600; font-family: 'DM Sans', sans-serif;
-    transition: all 0.15s; margin-bottom: 10px;
-  }
-  .export-btn.primary {
-    background: var(--green-mid); color: #fff;
-    box-shadow: 0 3px 10px rgba(45,106,79,0.3);
-  }
-  .export-btn.primary:active { background: var(--green-dark); transform: scale(0.98); }
-  .export-btn.secondary {
-    background: var(--grey-light); color: var(--text-dark);
-    border: 1.5px solid #ddd;
-  }
-  .export-btn.secondary:active { background: #e4e4e0; transform: scale(0.98); }
-
-  .csv-preview {
-    background: var(--cream); border-radius: 8px; padding: 12px;
-    font-size: 11px; font-family: 'DM Mono', monospace; color: var(--text-mid);
-    overflow-x: auto; white-space: pre; line-height: 1.6;
-    max-height: 160px; overflow-y: auto; margin-top: 12px;
-  }
-
-  /* ── TOAST ── */
-  .toast {
-    position: absolute; top: 80px; left: 50%; transform: translateX(-50%) translateY(-20px);
-    background: var(--green-dark); color: #fff;
-    padding: 10px 20px; border-radius: 20px;
-    font-size: 13px; font-weight: 500;
-    opacity: 0; transition: opacity 0.3s, transform 0.3s;
-    pointer-events: none; z-index: 100; white-space: nowrap;
-  }
-  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-  /* ── EMPTY STATE ── */
-  .empty-state {
-    text-align: center; padding: 40px 24px;
-    color: var(--grey-mid);
-  }
-  .empty-icon { font-size: 40px; margin-bottom: 12px; }
-  .empty-title { font-size: 15px; font-weight: 500; color: var(--text-mid); margin-bottom: 6px; }
-  .empty-desc { font-size: 13px; line-height: 1.5; }
-
-  /* ── CHART BAR ── */
-  .mini-chart { margin: 0 16px 0; }
-  .chart-bars {
-    display: flex; align-items: flex-end; gap: 6px;
-    height: 80px; padding: 0 4px;
-  }
-  .chart-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-  .chart-bar-wrap { flex: 1; display: flex; align-items: flex-end; width: 100%; }
-  .chart-bar {
-    width: 100%; border-radius: 4px 4px 0 0;
-    background: var(--green-light); min-height: 3px;
-    transition: height 0.3s ease;
-  }
-  .chart-bar.today { background: var(--green-dark); }
-  .chart-lbl { font-size: 9px; color: var(--grey-mid); font-family: 'DM Mono', monospace; }
-
-  /* ── SETTINGS / INFO ── */
-  .info-card {
-    background: var(--white); margin: 8px 16px; border-radius: var(--radius);
-    padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-  }
-  .info-row {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 10px 0; border-bottom: 1px solid #f0f0f0;
-  }
-  .info-row:last-child { border-bottom: none; }
-  .info-key { font-size: 13px; color: var(--text-mid); }
-  .info-val { font-size: 13px; font-weight: 500; color: var(--text-dark); font-family: 'DM Mono', monospace; }
-
-  .danger-btn {
-    width: calc(100% - 32px); margin: 8px 16px; height: 44px;
-    border-radius: 12px; border: 1.5px solid #FADBD8;
-    background: transparent; color: var(--status-red);
-    font-size: 14px; font-weight: 500; cursor: pointer;
-  }
-  .danger-btn:active { background: #FADBD8; }
-
-  input[type=number]::-webkit-inner-spin-button,
-  input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
-  input[type=number] { -moz-appearance: textfield; }
-
-  .notes-input {
-    width: 100%; border: 1.5px solid #eee; border-radius: 8px;
-    padding: 10px 12px; font-size: 14px; font-family: 'DM Sans', sans-serif;
-    color: var(--text-dark); background: var(--cream); outline: none; resize: none;
-    margin-top: 10px; height: 56px;
-  }
-  .notes-input:focus { border-color: var(--green-light); background: #fff; }
+/* LOADING */
+.loading{position:absolute;inset:0;background:var(--g1);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:300;gap:16px}
+.loading-icon{font-size:48px;animation:spin 2s linear infinite}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.loading-txt{font-size:14px;color:rgba(255,255,255,0.6);font-family:var(--mono)}
 </style>
 </head>
 <body>
 <div id="app">
-
-  <!-- TOP BAR -->
-  <div class="topbar">
-    <div>
-      <div class="topbar-title">Nomvula Rainfall</div>
-      <div class="topbar-sub">Klaserie Nature Reserve</div>
-    </div>
-    <button class="icon-btn" onclick="showPage('settings')" title="Settings">⚙</button>
+  <div class="loading" id="loadingScreen">
+    <div class="loading-icon">🌧</div>
+    <div class="loading-txt">Loading Nomvula data…</div>
   </div>
 
-  <!-- SCROLL AREA -->
+  <div class="topbar">
+    <div class="topbar-brand">
+      <div class="topbar-icon">🌿</div>
+      <div>
+        <div class="topbar-name">Nomvula Rainfall</div>
+        <div class="topbar-loc">KLASERIE NATURE RESERVE</div>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <button class="icon-btn" onclick="syncNow()" title="Sync">🔄</button>
+      <button class="icon-btn" onclick="showPage('settings')" title="Settings">⚙</button>
+    </div>
+  </div>
+
+  <div class="sync-bar">
+    <div class="sync-dot" id="syncDot"></div>
+    <div class="sync-txt" id="syncTxt">Ready</div>
+    <button class="sync-btn" onclick="syncNow()">SYNC NOW</button>
+  </div>
+
   <div class="scroll-area" id="mainScroll">
 
-    <!-- HOME PAGE -->
+    <!-- RECORD -->
     <div class="page active" id="page-home">
-      <div class="hero-card">
+      <div class="hero">
         <div class="hero-date" id="heroDate"></div>
-        <div class="hero-label">Today's rainfall</div>
-        <div class="rain-input-row">
-          <div class="rain-input-wrap">
-            <input type="number" class="rain-input" id="rainInput"
-              placeholder="0.0" step="0.1" min="0" max="500" inputmode="decimal">
-            <span class="rain-unit">mm</span>
+        <div class="hero-today">Record today's rainfall</div>
+        <div class="rain-row">
+          <div class="rain-wrap">
+            <input type="number" class="rain-input" id="rainInput" placeholder="0.0" step="0.1" min="0" max="999" inputmode="decimal">
+            <span class="rain-unit-lbl">mm</span>
           </div>
-          <button class="save-btn" onclick="saveEntry()" title="Save">✓</button>
+          <button class="save-btn" onclick="saveEntry()">✓</button>
         </div>
-        <div class="quick-btns">
-          <button class="quick-btn" onclick="setRain(0)">0 mm</button>
-          <button class="quick-btn" onclick="setRain(2.5)">2.5</button>
-          <button class="quick-btn" onclick="setRain(5)">5.0</button>
-          <button class="quick-btn" onclick="setRain(10)">10</button>
-          <button class="quick-btn" onclick="setRain(25)">25</button>
+        <div class="quick-row">
+          <button class="qbtn" onclick="setRain(0)">0</button>
+          <button class="qbtn" onclick="setRain(2.5)">2.5</button>
+          <button class="qbtn" onclick="setRain(5)">5</button>
+          <button class="qbtn" onclick="setRain(10)">10</button>
+          <button class="qbtn" onclick="setRain(25)">25</button>
+          <button class="qbtn" onclick="setRain(50)">50</button>
         </div>
-        <div class="event-row" id="eventRow">
-          <button class="event-chip" onclick="toggleEvent(this,'None')">None</button>
-          <button class="event-chip" onclick="toggleEvent(this,'Drizzle')">Drizzle</button>
-          <button class="event-chip" onclick="toggleEvent(this,'Showers')">Showers</button>
-          <button class="event-chip" onclick="toggleEvent(this,'Thunderstorm')">Thunderstorm</button>
-          <button class="event-chip" onclick="toggleEvent(this,'Steady Rain')">Steady Rain</button>
+        <div class="event-row">
+          <button class="echip" onclick="toggleEvent(this,'None')">None</button>
+          <button class="echip" onclick="toggleEvent(this,'Drizzle')">Drizzle</button>
+          <button class="echip" onclick="toggleEvent(this,'Showers')">Showers</button>
+          <button class="echip" onclick="toggleEvent(this,'Thunderstorm')">⛈ Storm</button>
+          <button class="echip" onclick="toggleEvent(this,'Steady Rain')">Steady</button>
+          <button class="echip" onclick="toggleEvent(this,'Heavy Rain')">Heavy</button>
         </div>
-        <textarea class="notes-input" id="notesInput" placeholder="Observer / notes (optional)" rows="2"></textarea>
+        <textarea class="notes-inp" id="notesInp" placeholder="Observer / notes (optional)" rows="2"></textarea>
       </div>
 
-      <div class="stats-row">
-        <div class="stat-card">
-          <div class="stat-label">Monthly total</div>
-          <div><span class="stat-value" id="statMonthly">0</span><span class="stat-unit"> mm</span></div>
-          <div class="stat-sub" id="statMonthlyDays">0 rainy days</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Season total</div>
-          <div><span class="stat-value" id="statSeason">0</span><span class="stat-unit"> mm</span></div>
-          <div class="stat-sub">Sep 25 – Aug 26</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">LT average</div>
-          <div><span class="stat-value">500</span><span class="stat-unit"> mm</span></div>
-          <div class="stat-sub">Historical avg</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">This month avg</div>
-          <div><span class="stat-value" id="statMonthAvg">—</span><span class="stat-unit" id="statMonthAvgUnit"></span></div>
-          <div class="stat-sub" id="statMonthName"></div>
-        </div>
+      <div class="cards-grid">
+        <div class="card"><div class="card-lbl">Monthly total</div><div><span class="card-val" id="cMonthly">0</span><span class="card-unit"> mm</span></div><div class="card-sub" id="cMonthlyDays">0 rainy days</div></div>
+        <div class="card"><div class="card-lbl">Season total</div><div><span class="card-val" id="cSeason">0</span><span class="card-unit"> mm</span></div><div class="card-sub">Sep 25 – Aug 26</div></div>
+        <div class="card"><div class="card-lbl">LT average</div><div><span class="card-val">500</span><span class="card-unit"> mm</span></div><div class="card-sub">Historical avg</div></div>
+        <div class="card"><div class="card-lbl">Today</div><div><span class="card-val" id="cToday">—</span><span class="card-unit" id="cTodayU"></span></div><div class="card-sub" id="cTodayEv">Not entered</div></div>
       </div>
 
       <div id="statusBanner" class="status-banner s-nodata">
-        <div class="status-dot"></div>
-        <div class="status-text-wrap">
-          <div class="status-title">No season data yet</div>
-          <div class="status-desc">Start entering readings to see status</div>
-        </div>
-        <div class="status-pct" id="statusPct">—</div>
+        <div class="s-dot"></div>
+        <div class="s-text"><div class="s-title">No season data yet</div><div class="s-desc">Start entering readings</div></div>
+        <div class="s-pct" id="sPct">—</div>
       </div>
 
-      <div class="section-hdr">Last 7 days</div>
-      <div class="mini-chart" id="miniChart"></div>
+      <div class="shdr">Last 7 days</div>
+      <div class="chart-card"><div class="chart-wrap"><canvas id="chart7day"></canvas></div></div>
 
-      <div class="section-hdr">Recent entries</div>
-      <div class="log-list" id="recentLog"></div>
+      <div class="shdr">Recent entries <button class="shdr-action" onclick="showPage('history')">See all →</button></div>
+      <div class="log-wrap" id="recentLog"></div>
     </div>
 
-    <!-- HISTORY PAGE -->
+    <!-- ANALYSIS -->
+    <div class="page" id="page-analysis">
+      <div class="analysis-card">
+        <div class="an-title">📊 Season 2025/26 Analysis</div>
+        <div class="an-row"><span class="an-key">Season total</span><span class="an-val" id="anSeasonTotal">—</span></div>
+        <div class="an-row"><span class="an-key">LT average</span><span class="an-val">500 mm</span></div>
+        <div class="an-row"><span class="an-key">Variance</span><span class="an-val" id="anVariance">—</span></div>
+        <div class="an-row"><span class="an-key">% of average</span><span class="an-val" id="anPct">—</span></div>
+        <div class="an-row"><span class="an-key">Season status</span><span class="an-val" id="anStatus">—</span></div>
+        <div class="an-row"><span class="an-key">Rainy days</span><span class="an-val" id="anRainyDays">—</span></div>
+        <div class="an-row"><span class="an-key">Highest daily</span><span class="an-val" id="anMaxDay">—</span></div>
+        <div class="an-row"><span class="an-key">Date of highest</span><span class="an-val" id="anMaxDate">—</span></div>
+        <div class="an-row"><span class="an-key">Avg rainy-day</span><span class="an-val" id="anAvgRainy">—</span></div>
+        <div class="an-row"><span class="an-key">Dry days</span><span class="an-val" id="anDryDays">—</span></div>
+        <div class="an-row"><span class="an-key">Wettest month</span><span class="an-val" id="anWetMonth">—</span></div>
+        <div class="an-row"><span class="an-key">Driest month</span><span class="an-val" id="anDryMonth">—</span></div>
+      </div>
+
+      <div class="analysis-card" style="margin-top:10px">
+        <div class="an-title">📅 Monthly Breakdown (Sep→Aug)</div>
+        <div class="month-chart-wrap"><canvas id="chartMonthly"></canvas></div>
+      </div>
+
+      <div class="analysis-card" style="margin-top:10px">
+        <div class="an-title">📈 Calendar Year Stats</div>
+        <div class="an-row"><span class="an-key">2025 total</span><span class="an-val" id="anY2025">—</span></div>
+        <div class="an-row"><span class="an-key">2025 rainy days</span><span class="an-val" id="anY2025Rain">—</span></div>
+        <div class="an-row"><span class="an-key">2026 total (to Aug)</span><span class="an-val" id="anY2026">—</span></div>
+        <div class="an-row"><span class="an-key">2026 rainy days</span><span class="an-val" id="anY2026Rain">—</span></div>
+      </div>
+
+      <div class="analysis-card" style="margin-top:10px;margin-bottom:14px">
+        <div class="an-title">🌧 All Records (app data)</div>
+        <div class="an-row"><span class="an-key">Total entries</span><span class="an-val" id="anTotal">—</span></div>
+        <div class="an-row"><span class="an-key">All-time highest day</span><span class="an-val" id="anAllMax">—</span></div>
+        <div class="an-row"><span class="an-key">Date of highest</span><span class="an-val" id="anAllMaxDate">—</span></div>
+        <div class="an-row"><span class="an-key">All-time total</span><span class="an-val" id="anAllTotal">—</span></div>
+      </div>
+    </div>
+
+    <!-- HISTORY -->
     <div class="page" id="page-history">
       <div id="historyContent"></div>
     </div>
 
-    <!-- EXPORT PAGE -->
+    <!-- EXPORT -->
     <div class="page" id="page-export">
-      <div class="section-hdr">Export data</div>
-      <div class="export-card">
-        <div class="export-title">Daily CSV</div>
-        <div class="export-desc">Download all daily readings as a CSV file. Paste directly into the Excel tracker's Daily Log sheet.</div>
-        <button class="export-btn primary" onclick="exportCSV('daily')">Download daily CSV</button>
-        <div class="csv-preview" id="csvPreviewDaily">Loading preview…</div>
+      <div class="shdr">Import from Excel</div>
+      <div class="exp-card">
+        <div class="exp-title">📥 Import CSV from Excel</div>
+        <div class="exp-desc">Export your Daily Log from Excel as CSV (File → Save As → CSV). Select that file here — data merges with no duplicates.</div>
+        <button class="exp-btn import-btn" onclick="document.getElementById('importFileInput').click()">Select CSV file to import</button>
+        <input type="file" id="importFileInput" accept=".csv,.txt" onchange="importCSV(event)">
+        <div id="importResult" style="font-size:12px;color:var(--g3);margin-top:8px;font-family:var(--mono)"></div>
       </div>
-      <div class="export-card">
-        <div class="export-title">Monthly summary CSV</div>
-        <div class="export-desc">Monthly totals formatted for pasting into the Historical Monthly sheet (Sep→Aug columns).</div>
-        <button class="export-btn primary" onclick="exportCSV('monthly')">Download monthly CSV</button>
-        <div class="csv-preview" id="csvPreviewMonthly">Loading preview…</div>
+
+      <div class="shdr">Export to Excel</div>
+      <div class="exp-card">
+        <div class="exp-title">📤 Daily CSV</div>
+        <div class="exp-desc">All daily readings — paste into Excel Daily Log column E.</div>
+        <button class="exp-btn primary" onclick="exportCSV('daily')">Download daily CSV</button>
+        <div class="csv-pre" id="prevDaily">—</div>
       </div>
-      <div class="export-card">
-        <div class="export-title">Copy to clipboard</div>
-        <div class="export-desc">Copy the daily data as tab-separated text for quick pasting.</div>
-        <button class="export-btn secondary" onclick="copyToClipboard()">Copy to clipboard</button>
+
+      <div class="exp-card" style="margin-bottom:14px">
+        <div class="exp-title">📤 Monthly summary CSV</div>
+        <div class="exp-desc">Monthly totals Sep→Aug format — paste into Excel Historical Monthly sheet.</div>
+        <button class="exp-btn primary" onclick="exportCSV('monthly')">Download monthly CSV</button>
+        <button class="exp-btn secondary" onclick="copyClip()">Copy to clipboard</button>
+        <div class="csv-pre" id="prevMonthly">—</div>
       </div>
     </div>
 
-    <!-- SETTINGS PAGE -->
+    <!-- SETTINGS -->
     <div class="page" id="page-settings">
-      <div class="section-hdr">Station info</div>
-      <div class="info-card">
-        <div class="info-row"><span class="info-key">Station</span><span class="info-val">Nomvula</span></div>
-        <div class="info-row"><span class="info-key">Reserve</span><span class="info-val">Klaserie</span></div>
-        <div class="info-row"><span class="info-key">Season</span><span class="info-val">2025/26</span></div>
-        <div class="info-row"><span class="info-key">LT Average</span><span class="info-val">500 mm</span></div>
-        <div class="info-row"><span class="info-key">Total records</span><span class="info-val" id="totalRecords">0</span></div>
+      <div class="shdr">Station info</div>
+      <div class="set-card">
+        <div class="set-row"><span class="set-key">Station</span><span class="set-val">Nomvula</span></div>
+        <div class="set-row"><span class="set-key">Reserve</span><span class="set-val">Klaserie</span></div>
+        <div class="set-row"><span class="set-key">Season</span><span class="set-val">2025/26</span></div>
+        <div class="set-row"><span class="set-key">LT Average</span><span class="set-val">500 mm</span></div>
+        <div class="set-row"><span class="set-key">Records stored</span><span class="set-val" id="setRecords">0</span></div>
+        <div class="set-row"><span class="set-key">Last synced</span><span class="set-val" id="setLastSync">Never</span></div>
       </div>
 
-      <div class="section-hdr">Status thresholds</div>
-      <div class="info-card">
-        <div class="info-row"><span class="info-key" style="color:#27AE60">● Average</span><span class="info-val">400–599 mm</span></div>
-        <div class="info-row"><span class="info-key" style="color:#D4A017">● Below average</span><span class="info-val">&lt; 400 mm</span></div>
-        <div class="info-row"><span class="info-key" style="color:#E67E22">● Above average</span><span class="info-val">600–749 mm</span></div>
-        <div class="info-row"><span class="info-key" style="color:#C0392B">● Extreme</span><span class="info-val">≥ 750 mm</span></div>
+      <div class="shdr">GitHub sync token</div>
+      <div class="exp-card">
+        <div class="exp-title">Update token</div>
+        <div class="exp-desc">Syncs to nickleuenberger82-afk/nomvula-rainfall. Regenerate your token on GitHub if needed and paste here.</div>
+        <input type="password" class="token-inp" id="tokenInp" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+        <button class="exp-btn primary" style="margin-top:10px" onclick="saveToken()">Save token</button>
       </div>
 
-      <div class="section-hdr">Install app</div>
-      <div class="export-card">
-        <div class="export-title">Add to home screen</div>
-        <div class="export-desc">In Chrome, tap the menu (⋮) and select "Add to Home screen" to install this as an app on your Samsung phone.</div>
+      <div class="shdr">Status thresholds</div>
+      <div class="set-card">
+        <div class="set-row"><span class="set-key" style="color:#27ae60">● Average</span><span class="set-val">400–599 mm</span></div>
+        <div class="set-row"><span class="set-key" style="color:#d4a017">● Below average</span><span class="set-val">&lt; 400 mm</span></div>
+        <div class="set-row"><span class="set-key" style="color:#e67e22">● Above average</span><span class="set-val">600–749 mm</span></div>
+        <div class="set-row"><span class="set-key" style="color:#e74c3c">● Extreme</span><span class="set-val">≥ 750 mm</span></div>
       </div>
 
-      <div class="section-hdr">Data</div>
-      <div class="export-card">
-        <div class="export-title">About your data</div>
-        <div class="export-desc">All data is stored locally on this device. Export CSV regularly to back up to your Excel tracker.</div>
+      <div class="shdr">Install on Samsung</div>
+      <div class="exp-card">
+        <div class="exp-title">Add to home screen</div>
+        <div class="exp-desc">In Chrome tap ⋮ → "Add to Home screen" → Add. The app will appear on your Samsung home screen and work like a native app.</div>
       </div>
-      <button class="danger-btn" onclick="confirmClear()">Clear all data</button>
+
+      <div class="shdr">Data</div>
+      <button class="danger-btn" onclick="confirmClear()">⚠ Clear all local data</button>
+      <div style="height:20px"></div>
     </div>
 
-  </div><!-- end scroll-area -->
+  </div>
 
-  <!-- BOTTOM NAV -->
   <nav class="bottom-nav">
-    <button class="nav-btn active" id="nav-home" onclick="showPage('home')">
-      <span class="nav-icon">🌧</span>
-      <span>Record</span>
-    </button>
-    <button class="nav-btn" id="nav-history" onclick="showPage('history')">
-      <span class="nav-icon">📅</span>
-      <span>History</span>
-    </button>
-    <button class="nav-btn" id="nav-export" onclick="showPage('export')">
-      <span class="nav-icon">📤</span>
-      <span>Export</span>
-    </button>
-    <button class="nav-btn" id="nav-settings" onclick="showPage('settings')">
-      <span class="nav-icon">⚙️</span>
-      <span>Settings</span>
-    </button>
+    <button class="nav-btn active" id="nav-home" onclick="showPage('home')"><span class="nav-icon">🌧</span><span>Record</span><div class="nav-pip"></div></button>
+    <button class="nav-btn" id="nav-analysis" onclick="showPage('analysis')"><span class="nav-icon">📊</span><span>Analysis</span><div class="nav-pip"></div></button>
+    <button class="nav-btn" id="nav-history" onclick="showPage('history')"><span class="nav-icon">📅</span><span>History</span><div class="nav-pip"></div></button>
+    <button class="nav-btn" id="nav-export" onclick="showPage('export')"><span class="nav-icon">📤</span><span>Export</span><div class="nav-pip"></div></button>
   </nav>
 
   <div class="toast" id="toast"></div>
 </div>
 
 <script>
-const STORAGE_KEY = 'nomvula_rainfall_v1';
-const LT_AVG = 500;
-const SEASON_START = new Date('2025-09-01');
-const SEASON_END   = new Date('2026-08-31');
-let selectedEvent = '';
+const REPO_OWNER='nickleuenberger82-afk',REPO_NAME='nomvula-rainfall',DATA_FILE='rainfall-data.json';
+const LOCAL_KEY='nomvula_v2',TOKEN_KEY='nomvula_ghp';
+const LT_AVG=500;
+const SEASON_START=new Date('2025-09-01'),SEASON_END=new Date('2026-08-31');
+const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const MONTHS_S=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const DAYS_S=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const SEA_MONTHS=[{m:9,y:2025},{m:10,y:2025},{m:11,y:2025},{m:12,y:2025},{m:1,y:2026},{m:2,y:2026},{m:3,y:2026},{m:4,y:2026},{m:5,y:2026},{m:6,y:2026},{m:7,y:2026},{m:8,y:2026}];
+let chart7=null,chartMo=null,selectedEvent='';
 
-// ── DATA ────────────────────────────────────────────────────────────────────
-function loadData() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
-  catch { return {}; }
-}
-function saveData(d) { localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); }
-function todayKey() {
-  const t = new Date();
-  return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
-}
-function parseKey(k) {
-  const [y,m,d] = k.split('-').map(Number);
-  return new Date(y, m-1, d);
-}
+function getToken(){return localStorage.getItem(TOKEN_KEY)||'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';}
+function saveToken(){const t=document.getElementById('tokenInp').value.trim();if(!t){showToast('Enter a token first');return;}localStorage.setItem(TOKEN_KEY,t);showToast('Token saved ✓');}
+function loadLocal(){try{return JSON.parse(localStorage.getItem(LOCAL_KEY))||{};}catch{return {};}}
+function saveLocal(d){localStorage.setItem(LOCAL_KEY,JSON.stringify(d));}
+function todayKey(){const t=new Date();return `${t.getFullYear()}-${pad(t.getMonth()+1)}-${pad(t.getDate())}`;}
+function pad(n){return String(n).padStart(2,'0');}
+function parseKey(k){const[y,m,d]=k.split('-').map(Number);return new Date(y,m-1,d);}
+function fmtDate(k){if(!k)return'—';const d=parseKey(k);return `${d.getDate()} ${MONTHS_S[d.getMonth()]} ${d.getFullYear()}`;}
 
-// ── SAVE ENTRY ───────────────────────────────────────────────────────────────
-function saveEntry() {
-  const val = parseFloat(document.getElementById('rainInput').value);
-  if (isNaN(val) || val < 0) { showToast('Enter a valid rainfall amount'); return; }
-  const data = loadData();
-  const key = todayKey();
-  data[key] = { mm: Math.round(val * 10) / 10, event: selectedEvent, notes: document.getElementById('notesInput').value.trim() };
-  saveData(data);
-  document.getElementById('rainInput').value = '';
-  document.getElementById('notesInput').value = '';
-  resetEventChips();
-  showToast('Saved ✓');
-  renderHome();
-}
-function setRain(v) {
-  document.getElementById('rainInput').value = v;
-  document.getElementById('rainInput').focus();
-}
-function toggleEvent(el, name) {
-  if (selectedEvent === name) { selectedEvent = ''; el.classList.remove('active'); }
-  else {
-    document.querySelectorAll('.event-chip').forEach(c => c.classList.remove('active'));
-    selectedEvent = name; el.classList.add('active');
-  }
-}
-function resetEventChips() {
-  selectedEvent = '';
-  document.querySelectorAll('.event-chip').forEach(c => c.classList.remove('active'));
+function setSyncStatus(state,msg){
+  const dot=document.getElementById('syncDot'),txt=document.getElementById('syncTxt');
+  dot.className='sync-dot'+(state==='syncing'?' syncing':state==='error'?' error':'');
+  txt.textContent=msg;
 }
 
-// ── STATS ────────────────────────────────────────────────────────────────────
-function getStats(data) {
-  const now = new Date();
-  const curYear = now.getFullYear();
-  const curMonth = now.getMonth() + 1;
+async function fetchFromGitHub(){
+  try{
+    const res=await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${DATA_FILE}`,{headers:{Authorization:`token ${getToken()}`,Accept:'application/vnd.github.v3+json'}});
+    if(res.status===404)return null;
+    if(!res.ok)throw new Error('Fetch failed');
+    const json=await res.json();
+    return{data:JSON.parse(atob(json.content.replace(/\n/g,''))),sha:json.sha};
+  }catch(e){console.error(e);return null;}
+}
 
-  let monthlyTotal = 0, monthlyRainyDays = 0, seasonTotal = 0;
-  const last7 = [];
+async function pushToGitHub(data){
+  try{
+    setSyncStatus('syncing','Syncing to GitHub…');
+    const existing=await fetchFromGitHub();
+    const content=btoa(unescape(encodeURIComponent(JSON.stringify(data,null,2))));
+    const body={message:`Update rainfall data ${new Date().toISOString().slice(0,10)}`,content};
+    if(existing)body.sha=existing.sha;
+    const res=await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${DATA_FILE}`,{method:'PUT',headers:{Authorization:`token ${getToken()}`,'Content-Type':'application/json',Accept:'application/vnd.github.v3+json'},body:JSON.stringify(body)});
+    if(!res.ok)throw new Error('Push failed');
+    const now=new Date().toLocaleTimeString();
+    localStorage.setItem('nomvula_lastSync',now);
+    setSyncStatus('ok',`Synced ${now}`);
+    return true;
+  }catch(e){setSyncStatus('error','Sync failed — saved locally');console.error(e);return false;}
+}
 
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date(); d.setDate(d.getDate() - i);
-    const k = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-    last7.push({ key: k, date: new Date(d), mm: data[k] ? data[k].mm : null });
-  }
+async function syncNow(){
+  setSyncStatus('syncing','Connecting to GitHub…');
+  const remote=await fetchFromGitHub();
+  const local=loadLocal();
+  if(remote&&remote.data){const merged={...remote.data,...local};saveLocal(merged);await pushToGitHub(merged);}
+  else if(Object.keys(local).length>0)await pushToGitHub(local);
+  else setSyncStatus('ok','No data yet');
+  renderHome();renderAnalysis();
+}
 
-  Object.entries(data).forEach(([k, v]) => {
-    const d = parseKey(k);
-    if (d.getFullYear() === curYear && d.getMonth()+1 === curMonth) {
-      monthlyTotal += v.mm;
-      if (v.mm > 0) monthlyRainyDays++;
-    }
-    if (d >= SEASON_START && d <= SEASON_END) seasonTotal += v.mm;
+async function saveEntry(){
+  const raw=document.getElementById('rainInput').value;
+  const val=parseFloat(raw);
+  if(raw===''||isNaN(val)||val<0){showToast('Enter a valid amount');return;}
+  const data=loadLocal(),key=todayKey();
+  data[key]={mm:Math.round(val*10)/10,event:selectedEvent,notes:document.getElementById('notesInp').value.trim()};
+  saveLocal(data);
+  document.getElementById('rainInput').value='';document.getElementById('notesInp').value='';resetChips();
+  showToast('Saved ✓');renderHome();
+  await pushToGitHub(data);
+}
+
+function setRain(v){document.getElementById('rainInput').value=v;document.getElementById('rainInput').focus();}
+function toggleEvent(el,name){
+  if(selectedEvent===name){selectedEvent='';el.classList.remove('active');}
+  else{document.querySelectorAll('.echip').forEach(c=>c.classList.remove('active'));selectedEvent=name;el.classList.add('active');}
+}
+function resetChips(){selectedEvent='';document.querySelectorAll('.echip').forEach(c=>c.classList.remove('active'));}
+
+function computeStats(data){
+  const now=new Date(),cy=now.getFullYear(),cm=now.getMonth()+1;
+  let monthly=0,monthlyRain=0,seasonTotal=0,seasonRain=0,seasonDry=0;
+  let maxDay=0,maxKey='',allTotal=0,allMax=0,allMaxKey='';
+  let y2025=0,y2025Rain=0,y2026=0,y2026Rain=0;
+  Object.entries(data).forEach(([k,v])=>{
+    const d=parseKey(k),yr=d.getFullYear(),mo=d.getMonth()+1;
+    allTotal+=v.mm;if(v.mm>allMax){allMax=v.mm;allMaxKey=k;}
+    if(yr===cy&&mo===cm){monthly+=v.mm;if(v.mm>0)monthlyRain++;}
+    if(d>=SEASON_START&&d<=SEASON_END){seasonTotal+=v.mm;if(v.mm>0){seasonRain++;if(v.mm>maxDay){maxDay=v.mm;maxKey=k;}}else seasonDry++;}
+    if(yr===2025){y2025+=v.mm;if(v.mm>0)y2025Rain++;}
+    if(yr===2026){y2026+=v.mm;if(v.mm>0)y2026Rain++;}
   });
-
-  return { monthlyTotal: Math.round(monthlyTotal * 10)/10, monthlyRainyDays, seasonTotal: Math.round(seasonTotal * 10)/10, last7 };
-}
-
-function getStatus(seasonTotal) {
-  if (seasonTotal === 0) return { cls: 's-nodata', label: 'No season data yet', desc: 'Start entering readings', pct: '—' };
-  const pct = Math.round((seasonTotal / LT_AVG) * 100);
-  if (seasonTotal < 400)       return { cls: 's-below',   label: 'Below average',   desc: `${pct}% of historical avg`, pct: pct+'%' };
-  if (seasonTotal < 600)       return { cls: 's-average', label: 'Average',          desc: `${pct}% of historical avg`, pct: pct+'%' };
-  if (seasonTotal < 750)       return { cls: 's-above',   label: 'Above average',   desc: `${pct}% of historical avg`, pct: pct+'%' };
-  return                              { cls: 's-extreme', label: 'Extreme rainfall', desc: `${pct}% of historical avg`, pct: pct+'%' };
-}
-
-// ── RENDER HOME ───────────────────────────────────────────────────────────────
-function renderHome() {
-  const data = loadData();
-  const now = new Date();
-  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-  const days   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-
-  document.getElementById('heroDate').textContent =
-    `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
-
-  const stats = getStats(data);
-
-  document.getElementById('statMonthly').textContent = stats.monthlyTotal;
-  document.getElementById('statMonthlyDays').textContent = `${stats.monthlyRainyDays} rainy day${stats.monthlyRainyDays !== 1 ? 's' : ''}`;
-  document.getElementById('statSeason').textContent = stats.seasonTotal;
-  document.getElementById('statMonthName').textContent = months[now.getMonth()];
-
-  // Month average (rainy days only)
-  const monthEntries = Object.entries(data).filter(([k]) => {
-    const d = parseKey(k); return d.getFullYear() === now.getFullYear() && d.getMonth()+1 === now.getMonth()+1 && data[k].mm > 0;
+  const moBreakdown=SEA_MONTHS.map(({m,y})=>{
+    const tot=Object.entries(data).filter(([k])=>{const d=parseKey(k);return d.getFullYear()===y&&d.getMonth()+1===m;}).reduce((s,[,v])=>s+v.mm,0);
+    return{label:`${MONTHS_S[m-1]}-${String(y).slice(2)}`,total:Math.round(tot*10)/10};
   });
-  if (monthEntries.length > 0) {
-    const avg = stats.monthlyTotal / monthEntries.length;
-    document.getElementById('statMonthAvg').textContent = (Math.round(avg * 10)/10).toFixed(1);
-    document.getElementById('statMonthAvgUnit').textContent = ' mm';
-  } else {
-    document.getElementById('statMonthAvg').textContent = '—';
-    document.getElementById('statMonthAvgUnit').textContent = '';
-  }
-
-  // Status banner
-  const st = getStatus(stats.seasonTotal);
-  const banner = document.getElementById('statusBanner');
-  banner.className = `status-banner ${st.cls}`;
-  banner.querySelector('.status-title').textContent = st.label;
-  banner.querySelector('.status-desc').textContent = st.desc;
-  document.getElementById('statusPct').textContent = st.pct;
-
-  // Mini chart
-  renderMiniChart(stats.last7);
-
-  // Recent log (last 10)
-  const sorted = Object.entries(data).sort((a,b) => b[0].localeCompare(a[0])).slice(0,10);
-  const logEl = document.getElementById('recentLog');
-  if (sorted.length === 0) {
-    logEl.innerHTML = `<div class="empty-state"><div class="empty-icon">🌤</div><div class="empty-title">No entries yet</div><div class="empty-desc">Tap a quick amount or type a reading above to start recording.</div></div>`;
-  } else {
-    logEl.innerHTML = sorted.map(([k, v]) => {
-      const d = parseKey(k);
-      const label = `${d.getDate()} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]} ${d.getFullYear()}`;
-      const dotColor = v.mm === 0 ? '#ddd' : v.mm < 5 ? '#74C69D' : v.mm < 20 ? '#2D6A4F' : '#1B4332';
-      return `<div class="log-item">
-        <div class="log-dot" style="background:${dotColor}"></div>
-        <div style="flex:1"><div class="log-date">${label}</div>${v.event ? `<div class="log-event">${v.event}</div>` : ''}</div>
-        <div style="text-align:right"><div class="log-mm">${v.mm}</div><div class="log-unit-s">mm</div></div>
-        <button class="log-del" onclick="deleteEntry('${k}')">✕</button>
-      </div>`;
-    }).join('');
-  }
+  return{monthly:Math.round(monthly*10)/10,monthlyRain,seasonTotal:Math.round(seasonTotal*10)/10,seasonRain,seasonDry,maxDay,maxKey,allTotal:Math.round(allTotal*10)/10,allMax,allMaxKey,y2025:Math.round(y2025*10)/10,y2025Rain,y2026:Math.round(y2026*10)/10,y2026Rain,moBreakdown,totalEntries:Object.keys(data).length};
 }
 
-function renderMiniChart(last7) {
-  const max = Math.max(...last7.map(d => d.mm || 0), 1);
-  const today = todayKey();
-  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const days = ['Su','Mo','Tu','We','Th','Fr','Sa'];
-  document.getElementById('miniChart').innerHTML = `
-    <div style="background:var(--white);border-radius:var(--radius);padding:14px 16px;margin:0 16px;box-shadow:0 2px 8px rgba(0,0,0,0.05)">
-      <div class="chart-bars">
-        ${last7.map(d => {
-          const h = d.mm !== null ? Math.round((d.mm / max) * 70) : 0;
-          const isToday = d.key === today;
-          const lbl = `${d.date.getDate()}/${months[d.date.getMonth()].slice(0,3)}`;
-          return `<div class="chart-col">
-            <div class="chart-bar-wrap"><div class="chart-bar${isToday ? ' today' : ''}" style="height:${h}px"></div></div>
-            <div class="chart-lbl">${days[d.date.getDay()]}</div>
-          </div>`;
-        }).join('')}
-      </div>
-      <div style="display:flex;justify-content:space-between;margin-top:6px">
-        ${last7.map(d => `<div style="flex:1;text-align:center;font-size:9px;font-family:'DM Mono',monospace;color:var(--grey-mid)">${d.mm !== null ? d.mm : '—'}</div>`).join('')}
-      </div>
-    </div>`;
+function getStatus(tot){
+  if(tot===0)return{cls:'s-nodata',title:'No season data',desc:'Start entering readings',pct:'—'};
+  const pct=Math.round(tot/LT_AVG*100);
+  if(tot<400)return{cls:'s-below',title:'Below average',desc:`${pct}% of LT average`,pct:`${pct}%`};
+  if(tot<600)return{cls:'s-average',title:'Average',desc:`${pct}% of LT average`,pct:`${pct}%`};
+  if(tot<750)return{cls:'s-above',title:'Above average',desc:`${pct}% of LT average`,pct:`${pct}%`};
+  return{cls:'s-extreme',title:'Extreme rainfall',desc:`${pct}% of LT average`,pct:`${pct}%`};
+}
+function statusCol(tot){if(tot<400)return'amber';if(tot<600)return'green';if(tot<750)return'orange';return'red';}
+
+function renderHome(){
+  const data=loadLocal(),now=new Date();
+  document.getElementById('heroDate').textContent=`${DAYS_S[now.getDay()]} ${now.getDate()} ${MONTHS[now.getMonth()]} ${now.getFullYear()}`;
+  const st=computeStats(data);
+  document.getElementById('cMonthly').textContent=st.monthly;
+  document.getElementById('cMonthlyDays').textContent=`${st.monthlyRain} rainy day${st.monthlyRain!==1?'s':''}`;
+  document.getElementById('cSeason').textContent=st.seasonTotal;
+  const te=data[todayKey()];
+  if(te){document.getElementById('cToday').textContent=te.mm;document.getElementById('cTodayU').textContent=' mm';document.getElementById('cTodayEv').textContent=te.event||'Recorded';}
+  else{document.getElementById('cToday').textContent='—';document.getElementById('cTodayU').textContent='';document.getElementById('cTodayEv').textContent='Not entered';}
+  const status=getStatus(st.seasonTotal);
+  const banner=document.getElementById('statusBanner');
+  banner.className=`status-banner ${status.cls}`;
+  banner.querySelector('.s-title').textContent=status.title;
+  banner.querySelector('.s-desc').textContent=status.desc;
+  document.getElementById('sPct').textContent=status.pct;
+  render7DayChart(data);renderRecentLog(data);
 }
 
-// ── HISTORY ──────────────────────────────────────────────────────────────────
-function renderHistory() {
-  const data = loadData();
-  const sorted = Object.entries(data).sort((a,b) => b[0].localeCompare(a[0]));
-  const content = document.getElementById('historyContent');
-  if (sorted.length === 0) {
-    content.innerHTML = `<div class="empty-state" style="padding-top:60px"><div class="empty-icon">📋</div><div class="empty-title">No history yet</div><div class="empty-desc">Recorded entries will appear here organised by month.</div></div>`;
-    return;
-  }
+function render7DayChart(data){
+  const labels=[],values=[],colors=[];
+  for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const k=`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;labels.push(DAYS_S[d.getDay()]);values.push(data[k]?.mm??0);colors.push(i===0?'#1a3a2a':'#52b788');}
+  const ctx=document.getElementById('chart7day').getContext('2d');
+  if(chart7)chart7.destroy();
+  chart7=new Chart(ctx,{type:'bar',data:{labels,datasets:[{data:values,backgroundColor:colors,borderRadius:6,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw} mm`}}},scales:{x:{grid:{display:false},ticks:{font:{family:'Space Mono',size:10}}},y:{grid:{color:'#f0f0ec'},ticks:{font:{family:'Space Mono',size:9}},beginAtZero:true}}}});
+}
 
-  const byMonth = {};
-  sorted.forEach(([k, v]) => {
-    const d = parseKey(k);
-    const mk = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-    if (!byMonth[mk]) byMonth[mk] = [];
-    byMonth[mk].push([k, v, d]);
-  });
+function renderRecentLog(data){
+  const sorted=Object.entries(data).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,8);
+  const el=document.getElementById('recentLog');
+  if(!sorted.length){el.innerHTML=`<div class="empty"><div class="empty-icon">🌤</div><div class="empty-t">No entries yet</div><div class="empty-d">Use the form above to record rainfall</div></div>`;return;}
+  el.innerHTML=sorted.map(([k,v])=>{const d=parseKey(k);const dot=v.mm===0?'#ddd':v.mm<5?'#95d5b2':v.mm<20?'#52b788':'#1a3a2a';return `<div class="log-item"><div class="log-dot" style="background:${dot}"></div><div class="log-info"><div class="log-date">${d.getDate()} ${MONTHS_S[d.getMonth()]} ${d.getFullYear()}</div>${v.event||v.notes?`<div class="log-ev">${v.event||''}${v.event&&v.notes?' · ':''}${v.notes||''}</div>`:''}</div><div style="text-align:right"><div class="log-mm">${v.mm}</div><div class="log-u">mm</div></div><button class="del-btn" onclick="deleteEntry('${k}')">✕</button></div>`;}).join('');
+}
 
-  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-  content.innerHTML = `<div style="height:8px"></div>` + Object.entries(byMonth).map(([mk, entries]) => {
-    const [y, m] = mk.split('-').map(Number);
-    const total = entries.reduce((s, [,v]) => s + v.mm, 0);
-    return `<div class="month-section">
-      <div class="month-hdr">
-        <span>${months[m-1]} ${y}</span>
-        <span class="month-total">${Math.round(total * 10)/10} mm total</span>
-      </div>
-      ${entries.map(([k, v, d]) => {
-        const dotColor = v.mm === 0 ? '#ddd' : v.mm < 5 ? '#74C69D' : v.mm < 20 ? '#2D6A4F' : '#1B4332';
-        const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-        return `<div class="log-item">
-          <div class="log-dot" style="background:${dotColor}"></div>
-          <div style="flex:1">
-            <div class="log-date">${days[d.getDay()]} ${d.getDate()} ${months[m-1].slice(0,3)}</div>
-            ${v.event ? `<div class="log-event">${v.event}${v.notes ? ' · '+v.notes : ''}</div>` : (v.notes ? `<div class="log-event">${v.notes}</div>` : '')}
-          </div>
-          <div style="text-align:right"><div class="log-mm">${v.mm}</div><div class="log-unit-s">mm</div></div>
-          <button class="log-del" onclick="deleteEntry('${k}');renderHistory()">✕</button>
-        </div>`;
-      }).join('')}
-    </div>`;
+function renderAnalysis(){
+  const data=loadLocal(),st=computeStats(data),col=statusCol(st.seasonTotal);
+  const set=(id,val,cls='')=>{const el=document.getElementById(id);if(el){el.textContent=val;if(cls)el.className=`an-val ${cls}`;}};
+  set('anSeasonTotal',st.seasonTotal?`${st.seasonTotal} mm`:'—',col);
+  set('anVariance',st.seasonTotal?`${st.seasonTotal-LT_AVG>0?'+':''}${Math.round((st.seasonTotal-LT_AVG)*10)/10} mm`:'—',col);
+  set('anPct',st.seasonTotal?`${Math.round(st.seasonTotal/LT_AVG*100)}%`:'—',col);
+  set('anStatus',getStatus(st.seasonTotal).title,col);
+  set('anRainyDays',st.seasonRain?`${st.seasonRain} days`:'—');
+  set('anMaxDay',st.maxDay?`${st.maxDay} mm`:'—');
+  set('anMaxDate',st.maxKey?fmtDate(st.maxKey):'—');
+  set('anAvgRainy',st.seasonRain?`${Math.round(st.seasonTotal/st.seasonRain*10)/10} mm`:'—');
+  set('anDryDays',`${st.seasonDry} days`);
+  const wetMo=st.moBreakdown.reduce((b,m)=>m.total>b.total?m:b,{total:-1,label:'—'});
+  const dryMo=st.moBreakdown.filter(m=>m.total>0).reduce((b,m)=>m.total<b.total?m:b,{total:Infinity,label:'—'});
+  set('anWetMonth',wetMo.label);set('anDryMonth',dryMo.total===Infinity?'—':dryMo.label);
+  set('anY2025',st.y2025?`${st.y2025} mm`:'—');set('anY2025Rain',st.y2025Rain?`${st.y2025Rain} days`:'—');
+  set('anY2026',st.y2026?`${st.y2026} mm`:'—');set('anY2026Rain',st.y2026Rain?`${st.y2026Rain} days`:'—');
+  set('anTotal',`${st.totalEntries} days`);set('anAllMax',st.allMax?`${st.allMax} mm`:'—');
+  set('anAllMaxDate',st.allMaxKey?fmtDate(st.allMaxKey):'—');set('anAllTotal',st.allTotal?`${st.allTotal} mm`:'—');
+  const ctx=document.getElementById('chartMonthly').getContext('2d');
+  if(chartMo)chartMo.destroy();
+  chartMo=new Chart(ctx,{type:'bar',data:{labels:st.moBreakdown.map(m=>m.label),datasets:[{label:'mm',data:st.moBreakdown.map(m=>m.total),backgroundColor:st.moBreakdown.map(m=>m.total>0?'#2d6a4f':'#e0ede4'),borderRadius:5,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw} mm`}}},scales:{x:{grid:{display:false},ticks:{font:{family:'Space Mono',size:9},maxRotation:45}},y:{grid:{color:'#f0f0ec'},ticks:{font:{family:'Space Mono',size:9}},beginAtZero:true}}}});
+}
+
+function renderHistory(){
+  const data=loadLocal(),sorted=Object.entries(data).sort((a,b)=>b[0].localeCompare(a[0]));
+  const el=document.getElementById('historyContent');
+  if(!sorted.length){el.innerHTML=`<div class="empty" style="padding-top:60px"><div class="empty-icon">📋</div><div class="empty-t">No history yet</div><div class="empty-d">Entries organised by month will appear here</div></div>`;return;}
+  const byMonth={};
+  sorted.forEach(([k,v])=>{const d=parseKey(k);const mk=`${d.getFullYear()}-${pad(d.getMonth()+1)}`;if(!byMonth[mk])byMonth[mk]=[];byMonth[mk].push([k,v,d]);});
+  el.innerHTML='<div style="height:8px"></div>'+Object.entries(byMonth).map(([mk,entries])=>{
+    const[y,m]=mk.split('-').map(Number),total=Math.round(entries.reduce((s,[,v])=>s+v.mm,0)*10)/10;
+    return `<div class="month-block"><div class="month-hdr"><span>${MONTHS[m-1]} ${y}</span><span class="month-total-lbl">${total} mm</span></div>${entries.map(([k,v,d])=>{const dot=v.mm===0?'#ddd':v.mm<5?'#95d5b2':v.mm<20?'#52b788':'#1a3a2a';return `<div class="log-item"><div class="log-dot" style="background:${dot}"></div><div class="log-info"><div class="log-date">${DAYS_S[d.getDay()]} ${d.getDate()} ${MONTHS_S[d.getMonth()]}</div>${v.event||v.notes?`<div class="log-ev">${v.event||''}${v.event&&v.notes?' · ':''}${v.notes||''}</div>`:''}</div><div style="text-align:right"><div class="log-mm">${v.mm}</div><div class="log-u">mm</div></div><button class="del-btn" onclick="deleteEntry('${k}');renderHistory()">✕</button></div>`;}).join('')}</div>`;
   }).join('');
 }
 
-// ── EXPORT ────────────────────────────────────────────────────────────────────
-function buildDailyCSV() {
-  const data = loadData();
-  const rows = ['Date,Day,Month,Year,Rainfall (mm),Rainy Day,Event Type,Notes'];
-  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-  Object.entries(data).sort((a,b) => a[0].localeCompare(b[0])).forEach(([k, v]) => {
-    const d = parseKey(k);
-    rows.push(`${k},${days[d.getDay()]},${months[d.getMonth()]},${d.getFullYear()},${v.mm},${v.mm > 0 ? 'Yes' : 'No'},${v.event || ''},${v.notes || ''}`);
-  });
+function buildDailyCSV(){
+  const data=loadLocal(),rows=['Date,Day,Month,Year,Rainfall (mm),Rainy Day,Event Type,Notes'];
+  Object.entries(data).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([k,v])=>{const d=parseKey(k);rows.push(`${k},${DAYS_S[d.getDay()]},${MONTHS_S[d.getMonth()]},${d.getFullYear()},${v.mm},${v.mm>0?'Yes':'No'},${v.event||''},${(v.notes||'').replace(/,/g,';')}`);});
   return rows.join('\n');
 }
 
-function buildMonthlyCSV() {
-  const data = loadData();
-  const monthly = {};
-  Object.entries(data).forEach(([k, v]) => {
-    const d = parseKey(k);
-    const mk = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-    if (!monthly[mk]) monthly[mk] = 0;
-    monthly[mk] += v.mm;
-  });
-  // Season format: Sep → Aug
-  const seasonOrder = [9,10,11,12,1,2,3,4,5,6,7,8];
-  const months = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const rows = ['Season,Sep,Oct,Nov,Dec,Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Season Total'];
-  // Group by season
-  const seasons = {};
-  Object.keys(monthly).forEach(mk => {
-    const [y, m] = mk.split('-').map(Number);
-    const seasonYear = m >= 9 ? y : y - 1;
-    const sk = `${seasonYear}/${String(seasonYear+1).slice(2)}`;
-    if (!seasons[sk]) seasons[sk] = {};
-    seasons[sk][m] = Math.round(monthly[mk] * 10) / 10;
-  });
-  Object.entries(seasons).sort().forEach(([sk, mData]) => {
-    const vals = seasonOrder.map(m => mData[m] !== undefined ? mData[m] : '');
-    const total = Object.values(mData).reduce((s, v) => s + (v || 0), 0);
-    rows.push(`${sk},${vals.join(',')},${Math.round(total * 10)/10}`);
-  });
+function buildMonthlyCSV(){
+  const data=loadLocal(),monthly={};
+  Object.entries(data).forEach(([k,v])=>{const d=parseKey(k);const mk=`${d.getFullYear()}-${pad(d.getMonth()+1)}`;if(!monthly[mk])monthly[mk]=0;monthly[mk]+=v.mm;});
+  const seasons={};
+  Object.keys(monthly).forEach(mk=>{const[y,m]=mk.split('-').map(Number);const sy=m>=9?y:y-1;const sk=`${sy}/${String(sy+1).slice(2)}`;if(!seasons[sk])seasons[sk]={};seasons[sk][m]=Math.round(monthly[mk]*10)/10;});
+  const ord=[9,10,11,12,1,2,3,4,5,6,7,8];
+  const rows=['Season,Sep,Oct,Nov,Dec,Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Season Total'];
+  Object.entries(seasons).sort().forEach(([sk,mData])=>{const vals=ord.map(m=>mData[m]!==undefined?mData[m]:'');const tot=Object.values(mData).reduce((s,v)=>s+(v||0),0);rows.push(`${sk},${vals.join(',')},${Math.round(tot*10)/10}`);});
   return rows.join('\n');
 }
 
-function renderExport() {
-  const daily = buildDailyCSV();
-  const monthly = buildMonthlyCSV();
-  const lines = daily.split('\n');
-  document.getElementById('csvPreviewDaily').textContent = lines.slice(0, Math.min(8, lines.length)).join('\n') + (lines.length > 8 ? '\n…' : '');
-  const mLines = monthly.split('\n');
-  document.getElementById('csvPreviewMonthly').textContent = mLines.slice(0, Math.min(6, mLines.length)).join('\n') + (mLines.length > 6 ? '\n…' : '');
+function renderExportPreviews(){
+  const d=buildDailyCSV().split('\n');document.getElementById('prevDaily').textContent=d.slice(0,6).join('\n')+(d.length>6?'\n…':'');
+  const m=buildMonthlyCSV().split('\n');document.getElementById('prevMonthly').textContent=m.slice(0,5).join('\n')+(m.length>5?'\n…':'');
 }
 
-function exportCSV(type) {
-  const csv = type === 'daily' ? buildDailyCSV() : buildMonthlyCSV();
-  const fname = type === 'daily' ? 'nomvula_daily_rainfall.csv' : 'nomvula_monthly_rainfall.csv';
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href = url; a.download = fname;
-  document.body.appendChild(a); a.click();
-  document.body.removeChild(a); URL.revokeObjectURL(url);
-  showToast('Download started');
+function exportCSV(type){
+  const csv=type==='daily'?buildDailyCSV():buildMonthlyCSV(),fname=type==='daily'?'nomvula_daily.csv':'nomvula_monthly.csv';
+  const blob=new Blob([csv],{type:'text/csv'}),url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=fname;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+  showToast('Download started ✓');
 }
 
-function copyToClipboard() {
-  const csv = buildDailyCSV().replace(/,/g, '\t');
-  navigator.clipboard.writeText(csv).then(() => showToast('Copied to clipboard!')).catch(() => showToast('Copy failed — use Export instead'));
+function copyClip(){navigator.clipboard.writeText(buildDailyCSV().replace(/,/g,'\t')).then(()=>showToast('Copied!')).catch(()=>showToast('Use Export button instead'));}
+
+function importCSV(event){
+  const file=event.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=async e=>{
+    const lines=e.target.result.split('\n').map(l=>l.trim()).filter(Boolean);
+    const data=loadLocal();let imported=0,skipped=0;
+    lines.forEach(line=>{
+      if(line.toLowerCase().startsWith('date'))return;
+      const cols=line.split(',');if(cols.length<5)return;
+      const key=cols[0].trim();if(!/^\d{4}-\d{2}-\d{2}$/.test(key))return;
+      const mm=parseFloat(cols[4]);if(isNaN(mm)){skipped++;return;}
+      if(!data[key]){data[key]={mm,event:cols[6]||'',notes:cols[7]||''};imported++;}else skipped++;
+    });
+    saveLocal(data);
+    document.getElementById('importResult').textContent=`✓ Imported ${imported} records. ${skipped} skipped.`;
+    showToast(`Imported ${imported} records`);
+    await pushToGitHub(data);
+    renderHome();renderAnalysis();
+  };
+  reader.readAsText(file);event.target.value='';
 }
 
-// ── SETTINGS ─────────────────────────────────────────────────────────────────
-function renderSettings() {
-  document.getElementById('totalRecords').textContent = Object.keys(loadData()).length;
+async function deleteEntry(key){
+  if(!confirm('Delete this entry?'))return;
+  const data=loadLocal();delete data[key];saveLocal(data);
+  showToast('Deleted');renderHome();await pushToGitHub(data);
 }
 
-function confirmClear() {
-  if (confirm('Delete ALL rainfall records? This cannot be undone.')) {
-    localStorage.removeItem(STORAGE_KEY);
-    showToast('All data cleared');
-    renderHome();
-    renderSettings();
-  }
+function renderSettings(){
+  document.getElementById('setRecords').textContent=Object.keys(loadLocal()).length;
+  document.getElementById('setLastSync').textContent=localStorage.getItem('nomvula_lastSync')||'Never';
 }
 
-// ── NAV ───────────────────────────────────────────────────────────────────────
-function showPage(name) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('page-' + name).classList.add('active');
-  const nb = document.getElementById('nav-' + name);
-  if (nb) nb.classList.add('active');
-  document.getElementById('mainScroll').scrollTop = 0;
-  if (name === 'history') renderHistory();
-  if (name === 'export')  renderExport();
-  if (name === 'settings') renderSettings();
+function confirmClear(){if(confirm('Clear all local data? GitHub copy stays safe.')){localStorage.removeItem(LOCAL_KEY);showToast('Local data cleared');renderHome();renderSettings();}}
+
+function showPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  const nb=document.getElementById('nav-'+name);if(nb)nb.classList.add('active');
+  document.getElementById('mainScroll').scrollTop=0;
+  if(name==='history')renderHistory();
+  if(name==='analysis')renderAnalysis();
+  if(name==='export')renderExportPreviews();
+  if(name==='settings')renderSettings();
 }
 
-// ── DELETE ────────────────────────────────────────────────────────────────────
-function deleteEntry(key) {
-  if (!confirm('Delete this entry?')) return;
-  const data = loadData(); delete data[key]; saveData(data);
-  showToast('Entry deleted'); renderHome();
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400);}
+
+document.getElementById('rainInput').addEventListener('keydown',e=>{if(e.key==='Enter')saveEntry();});
+
+async function init(){
+  setSyncStatus('syncing','Loading from GitHub…');
+  try{
+    const remote=await fetchFromGitHub();
+    if(remote&&remote.data){const local=loadLocal();const merged={...remote.data,...local};saveLocal(merged);const now=new Date().toLocaleTimeString();localStorage.setItem('nomvula_lastSync',now);setSyncStatus('ok',`Synced ${now}`);}
+    else setSyncStatus('ok','Ready');
+  }catch(e){setSyncStatus('error','Offline — using local data');}
+  renderHome();
+  document.getElementById('loadingScreen').style.display='none';
 }
-
-// ── TOAST ─────────────────────────────────────────────────────────────────────
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2200);
-}
-
-// ── KEYBOARD SUBMIT ───────────────────────────────────────────────────────────
-document.getElementById('rainInput').addEventListener('keydown', e => {
-  if (e.key === 'Enter') saveEntry();
-});
-
-// ── INIT ──────────────────────────────────────────────────────────────────────
-renderHome();
+init();
 </script>
 </body>
 </html>
