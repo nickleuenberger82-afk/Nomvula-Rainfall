@@ -5,12 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#1a3a2a">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Nomvula Rain">
 <title>Nomvula Rainfall — Klaserie</title>
-<link rel="manifest" href="manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-<!-- Chart.js removed — using SVG charts -->
 <style>
 :root {
   --g1:#0d2318;--g2:#1a3a2a;--g3:#2d6a4f;--g4:#52b788;--g5:#95d5b2;
@@ -152,7 +151,7 @@ input[type=number]{-moz-appearance:textfield}
 .exp-btn.import-btn{background:linear-gradient(135deg,var(--blue),#1a3a5c);color:var(--white)}
 .exp-btn.import-btn:active{opacity:0.9;transform:scale(0.98)}
 .csv-pre{background:#f4f0e0;border-radius:8px;padding:10px;font-size:10px;font-family:var(--mono);color:var(--txt-mid);overflow-x:auto;white-space:pre;line-height:1.6;max-height:130px;overflow-y:auto;margin-top:10px}
-#importFileInput{display:none}
+#importFileInput,#importHistInput{display:none}
 
 /* SETTINGS */
 .set-card{background:var(--white);margin:10px 14px 0;border-radius:var(--radius);padding:0;box-shadow:var(--shadow);overflow:hidden}
@@ -180,13 +179,15 @@ input[type=number]{-moz-appearance:textfield}
 .loading-icon{font-size:48px;animation:spin 2s linear infinite}
 @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 .loading-txt{font-size:14px;color:rgba(255,255,255,0.6);font-family:var(--mono)}
+.loading-err{font-size:12px;color:var(--coral);font-family:var(--mono);text-align:center;max-width:280px;line-height:1.5;display:none}
 </style>
 </head>
 <body>
 <div id="app">
   <div class="loading" id="loadingScreen">
     <div class="loading-icon">🌧</div>
-    <div class="loading-txt">Loading Nomvula data…</div>
+    <div class="loading-txt" id="loadingTxt">Loading Nomvula data…</div>
+    <div class="loading-err" id="loadingErr"></div>
   </div>
 
   <div class="topbar">
@@ -245,7 +246,7 @@ input[type=number]{-moz-appearance:textfield}
       <div class="cards-grid">
         <div class="card"><div class="card-lbl">Monthly total</div><div><span class="card-val" id="cMonthly">0</span><span class="card-unit"> mm</span></div><div class="card-sub" id="cMonthlyDays">0 rainy days</div></div>
         <div class="card"><div class="card-lbl">Season total</div><div><span class="card-val" id="cSeason">0</span><span class="card-unit"> mm</span></div><div class="card-sub">Sep 25 – Aug 26</div></div>
-        <div class="card"><div class="card-lbl">LT average</div><div><span class="card-val">500</span><span class="card-unit"> mm</span></div><div class="card-sub">Historical avg</div></div>
+        <div class="card"><div class="card-lbl">LT average</div><div><span class="card-val" id="cLTAvg">500</span><span class="card-unit"> mm</span></div><div class="card-sub">Historical avg</div></div>
         <div class="card"><div class="card-lbl">Today</div><div><span class="card-val" id="cToday">—</span><span class="card-unit" id="cTodayU"></span></div><div class="card-sub" id="cTodayEv">Not entered</div></div>
       </div>
 
@@ -267,7 +268,7 @@ input[type=number]{-moz-appearance:textfield}
       <div class="analysis-card">
         <div class="an-title">📊 Season 2025/26 Analysis</div>
         <div class="an-row"><span class="an-key">Season total</span><span class="an-val" id="anSeasonTotal">—</span></div>
-        <div class="an-row"><span class="an-key">LT average</span><span class="an-val">500 mm</span></div>
+        <div class="an-row"><span class="an-key">LT average</span><span class="an-val" id="anLTAvg">500 mm</span></div>
         <div class="an-row"><span class="an-key">Variance</span><span class="an-val" id="anVariance">—</span></div>
         <div class="an-row"><span class="an-key">% of average</span><span class="an-val" id="anPct">—</span></div>
         <div class="an-row"><span class="an-key">Season status</span><span class="an-val" id="anStatus">—</span></div>
@@ -295,18 +296,16 @@ input[type=number]{-moz-appearance:textfield}
 
       <div class="analysis-card" style="margin-top:10px">
         <div class="an-title">📜 Historical Season Totals (1996–present)</div>
-        <div id="histStatsBlock">
-          <div class="an-row"><span class="an-key">Seasons on record</span><span class="an-val" id="anHistCount">—</span></div>
-          <div class="an-row"><span class="an-key">Long-term average</span><span class="an-val" id="anHistAvg">—</span></div>
-          <div class="an-row"><span class="an-key">Wettest season</span><span class="an-val" id="anHistWet">—</span></div>
-          <div class="an-row"><span class="an-key">Driest season</span><span class="an-val" id="anHistDry">—</span></div>
-          <div class="an-row"><span class="an-key">Highest season total</span><span class="an-val" id="anHistMax">—</span></div>
-          <div class="an-row"><span class="an-key">Lowest season total</span><span class="an-val" id="anHistMin">—</span></div>
-          <div class="an-row"><span class="an-key">Std deviation</span><span class="an-val" id="anHistStd">—</span></div>
-          <div class="an-row"><span class="an-key">Seasons above avg</span><span class="an-val" id="anHistAbove">—</span></div>
-          <div class="an-row"><span class="an-key">Seasons below avg</span><span class="an-val" id="anHistBelow">—</span></div>
-          <div class="an-row"><span class="an-key">Current vs LT avg</span><span class="an-val" id="anHistVsAvg">—</span></div>
-        </div>
+        <div class="an-row"><span class="an-key">Seasons on record</span><span class="an-val" id="anHistCount">—</span></div>
+        <div class="an-row"><span class="an-key">Long-term average</span><span class="an-val" id="anHistAvg">—</span></div>
+        <div class="an-row"><span class="an-key">Wettest season</span><span class="an-val" id="anHistWet">—</span></div>
+        <div class="an-row"><span class="an-key">Driest season</span><span class="an-val" id="anHistDry">—</span></div>
+        <div class="an-row"><span class="an-key">Highest season total</span><span class="an-val" id="anHistMax">—</span></div>
+        <div class="an-row"><span class="an-key">Lowest season total</span><span class="an-val" id="anHistMin">—</span></div>
+        <div class="an-row"><span class="an-key">Std deviation</span><span class="an-val" id="anHistStd">—</span></div>
+        <div class="an-row"><span class="an-key">Seasons above avg</span><span class="an-val" id="anHistAbove">—</span></div>
+        <div class="an-row"><span class="an-key">Seasons below avg</span><span class="an-val" id="anHistBelow">—</span></div>
+        <div class="an-row"><span class="an-key">Current vs LT avg</span><span class="an-val" id="anHistVsAvg">—</span></div>
         <div style="position:relative;height:220px;margin-top:14px" id="chartHistSeason"></div>
         <div style="font-size:10px;color:var(--txt-soft);margin-top:8px;font-family:var(--mono);text-align:center">Import Historical Monthly CSV on the Export tab to populate this chart</div>
       </div>
@@ -416,7 +415,7 @@ input[type=number]{-moz-appearance:textfield}
 <script>
 const REPO_OWNER='nickleuenberger82-afk',REPO_NAME='nomvula-rainfall',DATA_FILE='rainfall-data.json';
 const LOCAL_KEY='nomvula_v2',TOKEN_KEY='nomvula_ghp',HIST_KEY='nomvula_hist_v1';
-const LT_AVG=500;
+let LT_AVG=500;
 const SEASON_START=new Date(2025,8,1),SEASON_END=new Date(2026,7,31);
 const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
 const MONTHS_S=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -445,10 +444,10 @@ async function fetchFromGitHub(){
   try{
     const res=await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${DATA_FILE}`,{headers:{Authorization:`token ${getToken()}`,Accept:'application/vnd.github.v3+json'}});
     if(res.status===404)return null;
-    if(!res.ok)throw new Error('Fetch failed');
+    if(!res.ok)throw new Error(`GitHub error ${res.status}`);
     const json=await res.json();
     return{data:JSON.parse(atob(json.content.replace(/\n/g,''))),sha:json.sha};
-  }catch(e){console.error(e);return null;}
+  }catch(e){console.error('fetchFromGitHub:',e);throw e;}
 }
 
 async function pushToGitHub(data){
@@ -469,11 +468,13 @@ async function pushToGitHub(data){
 
 async function syncNow(){
   setSyncStatus('syncing','Connecting to GitHub…');
-  const remote=await fetchFromGitHub();
-  const local=loadLocal();
-  if(remote&&remote.data){const merged={...remote.data,...local};saveLocal(merged);await pushToGitHub(merged);}
-  else if(Object.keys(local).length>0)await pushToGitHub(local);
-  else setSyncStatus('ok','No data yet');
+  try{
+    const remote=await fetchFromGitHub();
+    const local=loadLocal();
+    if(remote&&remote.data){const merged={...remote.data,...local};saveLocal(merged);await pushToGitHub(merged);}
+    else if(Object.keys(local).length>0)await pushToGitHub(local);
+    else setSyncStatus('ok','No data yet');
+  }catch(e){setSyncStatus('error','Sync failed');}
   renderHome();renderAnalysis();
 }
 
@@ -571,7 +572,6 @@ function render7DayChart(data){
   });
   html+='</div>';
   el.innerHTML=html;
-  el.style.display='block';
 }
 
 function renderRecentLog(data){
@@ -583,92 +583,99 @@ function renderRecentLog(data){
 
 function renderAnalysis(){
   const data=loadLocal(),st=computeStats(data),col=statusCol(st.seasonTotal);
-  const set=(id,val,cls='')=>{const el=document.getElementById(id);if(el){el.textContent=val;if(cls)el.className=`an-val ${cls}`;}};
-  set('anSeasonTotal',st.seasonTotal?`${st.seasonTotal} mm`:'—',col);
-  set('anVariance',st.seasonTotal?`${st.seasonTotal-LT_AVG>0?'+':''}${Math.round((st.seasonTotal-LT_AVG)*10)/10} mm`:'—',col);
-  set('anPct',st.seasonTotal?`${Math.round(st.seasonTotal/LT_AVG*100)}%`:'—',col);
-  set('anStatus',getStatus(st.seasonTotal).title,col);
-  set('anRainyDays',st.seasonRain?`${st.seasonRain} days`:'—');
-  set('anMaxDay',st.maxDay?`${st.maxDay} mm`:'—');
-  set('anMaxDate',st.maxKey?fmtDate(st.maxKey):'—');
-  set('anAvgRainy',st.seasonRain?`${Math.round(st.seasonTotal/st.seasonRain*10)/10} mm`:'—');
-  set('anDryDays',`${st.seasonDry} days`);
+  const setEl=(id,val,cls='')=>{const el=document.getElementById(id);if(el){el.textContent=val;if(cls)el.className=`an-val ${cls}`;}};
+  setEl('anSeasonTotal',st.seasonTotal?`${st.seasonTotal} mm`:'—',col);
+  setEl('anLTAvg',`${LT_AVG} mm`);
+  setEl('anVariance',st.seasonTotal?`${st.seasonTotal-LT_AVG>0?'+':''}${Math.round((st.seasonTotal-LT_AVG)*10)/10} mm`:'—',col);
+  setEl('anPct',st.seasonTotal?`${Math.round(st.seasonTotal/LT_AVG*100)}%`:'—',col);
+  setEl('anStatus',getStatus(st.seasonTotal).title,col);
+  setEl('anRainyDays',st.seasonRain?`${st.seasonRain} days`:'—');
+  setEl('anMaxDay',st.maxDay?`${st.maxDay} mm`:'—');
+  setEl('anMaxDate',st.maxKey?fmtDate(st.maxKey):'—');
+  setEl('anAvgRainy',st.seasonRain?`${Math.round(st.seasonTotal/st.seasonRain*10)/10} mm`:'—');
+  setEl('anDryDays',`${st.seasonDry} days`);
   const wetMo=st.moBreakdown.reduce((b,m)=>m.total>b.total?m:b,{total:-1,label:'—'});
   const dryMo=st.moBreakdown.filter(m=>m.total>0).reduce((b,m)=>m.total<b.total?m:b,{total:Infinity,label:'—'});
-  set('anWetMonth',wetMo.label);set('anDryMonth',dryMo.total===Infinity?'—':dryMo.label);
-  set('anY2025',st.y2025?`${st.y2025} mm`:'—');set('anY2025Rain',st.y2025Rain?`${st.y2025Rain} days`:'—');
-  set('anY2026',st.y2026?`${st.y2026} mm`:'—');set('anY2026Rain',st.y2026Rain?`${st.y2026Rain} days`:'—');
-  set('anTotal',`${st.totalEntries} days`);set('anAllMax',st.allMax?`${st.allMax} mm`:'—');
-  set('anAllMaxDate',st.allMaxKey?fmtDate(st.allMaxKey):'—');set('anAllTotal',st.allTotal?`${st.allTotal} mm`:'—');
-  // Historical seasons chart
+  setEl('anWetMonth',wetMo.label);
+  setEl('anDryMonth',dryMo.total===Infinity?'—':dryMo.label);
+  setEl('anY2025',st.y2025?`${st.y2025} mm`:'—');
+  setEl('anY2025Rain',st.y2025Rain?`${st.y2025Rain} days`:'—');
+  setEl('anY2026',st.y2026?`${st.y2026} mm`:'—');
+  setEl('anY2026Rain',st.y2026Rain?`${st.y2026Rain} days`:'—');
+  setEl('anTotal',`${st.totalEntries} days`);
+  setEl('anAllMax',st.allMax?`${st.allMax} mm`:'—');
+  setEl('anAllMaxDate',st.allMaxKey?fmtDate(st.allMaxKey):'—');
+  setEl('anAllTotal',st.allTotal?`${st.allTotal} mm`:'—');
+
+  // Monthly bar chart
+  (function(){
+    const el=document.getElementById('chartMonthly');
+    if(!el)return;
+    const values=st.moBreakdown.map(m=>m.total);
+    const labels=st.moBreakdown.map(m=>m.label);
+    const max=Math.max(...values,1);
+    let html='<div style="display:flex;align-items:flex-end;gap:4px;height:140px;padding:8px 4px 0;width:100%;box-sizing:border-box;">';
+    values.forEach((v,i)=>{
+      const pct=Math.round((v/max)*100);
+      const fill=v>0?'#2d6a4f':'#e0ede4';
+      html+=`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;">
+        <div style="font-size:8px;color:#2d6a4f;font-family:monospace;height:14px;line-height:14px;">${v>0?v:''}</div>
+        <div style="flex:1;width:100%;display:flex;align-items:flex-end;">
+          <div style="width:100%;height:${pct}%;background:${fill};border-radius:3px 3px 0 0;min-height:${v>0?3:1}px;"></div>
+        </div>
+        <div style="font-size:7px;color:#888;font-family:monospace;text-align:center;line-height:1.1;">${labels[i].replace('-','\n')}</div>
+      </div>`;
+    });
+    html+='</div>';
+    el.innerHTML=html;
+  })();
+
+  // Historical seasons
   const hist=loadHist();
   const hst=computeHistStats(hist);
   if(hst){
-    const set=(id,val,cls='')=>{const el=document.getElementById(id);if(el){el.textContent=val;if(cls)el.className=`an-val ${cls}`;}};
-    set('anHistCount',`${hst.count} seasons`);
-    set('anHistAvg',`${hst.avg} mm`);
-    set('anHistWet',`${hst.max.season} (${hst.max.total} mm)`,'green');
-    set('anHistDry',`${hst.min.season} (${hst.min.total} mm)`,'amber');
-    set('anHistMax',`${hst.max.total} mm`);
-    set('anHistMin',`${hst.min.total} mm`);
-    set('anHistStd',`± ${hst.std} mm`);
-    set('anHistAbove',`${hst.above} of ${hst.count}`,'green');
-    set('anHistBelow',`${hst.below} of ${hst.count}`,'amber');
-    const currSeason=st.seasonTotal;
-    const vsAvg=Math.round((currSeason-hst.avg)*10)/10;
-    set('anHistVsAvg',`${vsAvg>0?'+':''}${vsAvg} mm`,vsAvg>=0?'green':'amber');
-    // Update LT avg display
+    LT_AVG=hst.avg;
     document.getElementById('cLTAvg').textContent=hst.avg;
-    // Update status banner to use real LT avg
-    const realPct=Math.round(currSeason/hst.avg*100);
-    document.getElementById('sPct').textContent=currSeason>0?`${realPct}%`:'—';
-    // Render historical bar chart
-    // HTML Historical seasons chart
+    setEl('anHistCount',`${hst.count} seasons`);
+    setEl('anHistAvg',`${hst.avg} mm`);
+    setEl('anHistWet',`${hst.max.season} (${hst.max.total} mm)`,'green');
+    setEl('anHistDry',`${hst.min.season} (${hst.min.total} mm)`,'amber');
+    setEl('anHistMax',`${hst.max.total} mm`);
+    setEl('anHistMin',`${hst.min.total} mm`);
+    setEl('anHistStd',`± ${hst.std} mm`);
+    setEl('anHistAbove',`${hst.above} of ${hst.count}`,'green');
+    setEl('anHistBelow',`${hst.below} of ${hst.count}`,'amber');
+    const vsAvg=Math.round((st.seasonTotal-hst.avg)*10)/10;
+    setEl('anHistVsAvg',`${vsAvg>0?'+':''}${vsAvg} mm`,vsAvg>=0?'green':'amber');
+    setEl('anLTAvg',`${hst.avg} mm`);
+    // Historical bar chart
     (function(){
       const el=document.getElementById('chartHistSeason');
-      if(!el||!hst||!hst.seasons)return;
+      if(!el||!hst.seasons)return;
       const seasons=[...hst.seasons];
-      if(!hist['2025/26']&&currSeason>0)seasons.push({season:'2025/26★',total:currSeason});
+      if(st.seasonTotal>0)seasons.push({season:'25/26★',total:st.seasonTotal});
       const values=seasons.map(s=>s.total);
-      const labels=seasons.map(s=>s.season);
       const max=Math.max(...values,hst.avg||1,1);
-      const avgPct=Math.round((hst.avg/max)*100);
-      let html=`<div style="position:relative;width:100%;box-sizing:border-box;">
-        <div style="display:flex;align-items:flex-end;gap:2px;height:160px;padding:4px 2px 0;width:100%;box-sizing:border-box;overflow-x:auto;">`;
-      seasons.forEach((s,i)=>{
+      let html=`<div style="width:100%;overflow-x:auto;"><div style="display:flex;align-items:flex-end;gap:2px;height:160px;padding:4px 2px 0;min-width:${seasons.length*26}px;box-sizing:border-box;">`;
+      seasons.forEach(s=>{
         const pct=Math.round((s.total/max)*100);
-        let fill='#2d6a4f';
-        if(s.total<400)fill='#f1c40f';
-        else if(s.total<600)fill='#2d6a4f';
-        else if(s.total<750)fill='#e67e22';
-        else fill='#e74c3c';
+        let fill=s.total<400?'#f1c40f':s.total<600?'#2d6a4f':s.total<750?'#e67e22':'#e74c3c';
         if(s.season.includes('★'))fill='#1a3a2a';
         html+=`<div style="flex:0 0 auto;width:24px;display:flex;flex-direction:column;align-items:center;gap:1px;">
           <div style="width:18px;height:${pct}%;background:${fill};border-radius:2px 2px 0 0;min-height:${s.total>0?2:1}px;"></div>
           <div style="font-size:6px;color:#666;font-family:monospace;transform:rotate(-60deg);transform-origin:top center;margin-top:4px;white-space:nowrap;">${s.season}</div>
         </div>`;
       });
-      html+=`</div>
-        <div style="margin-top:8px;display:flex;align-items:center;gap:6px;padding:0 4px;flex-wrap:wrap;">
+      html+=`</div></div>
+        <div style="margin-top:28px;display:flex;align-items:center;gap:6px;padding:0 4px;flex-wrap:wrap;">
           <span style="display:inline-flex;align-items:center;gap:3px;font-size:10px;color:#555;"><span style="width:12px;height:8px;background:#f1c40f;border-radius:2px;display:inline-block;"></span>Below avg</span>
           <span style="display:inline-flex;align-items:center;gap:3px;font-size:10px;color:#555;"><span style="width:12px;height:8px;background:#2d6a4f;border-radius:2px;display:inline-block;"></span>Average</span>
           <span style="display:inline-flex;align-items:center;gap:3px;font-size:10px;color:#555;"><span style="width:12px;height:8px;background:#e67e22;border-radius:2px;display:inline-block;"></span>Above</span>
           <span style="display:inline-flex;align-items:center;gap:3px;font-size:10px;color:#555;"><span style="width:12px;height:8px;background:#e74c3c;border-radius:2px;display:inline-block;"></span>Extreme</span>
-        </div>
-      </div>`;
+        </div>`;
       el.innerHTML=html;
-      el.style.display='block';
     })();
-
-
-  // Fix for Samsung mobile — replace canvas element to force reinitialise
-  const oldCanvas=document.getElementById('chartMonthly');
-  const newCanvas=document.createElement('canvas');
-  newCanvas.id='chartMonthly';
-  oldCanvas.parentNode.replaceChild(newCanvas,oldCanvas);
-  const ctx=newCanvas.getContext('2d');
-  if(chartMo)chartMo.destroy();
-  chartMo=new Chart(ctx,{type:'bar',data:{labels:st.moBreakdown.map(m=>m.label),datasets:[{label:'mm',data:st.moBreakdown.map(m=>m.total),backgroundColor:st.moBreakdown.map(m=>m.total>0?'#2d6a4f':'#e0ede4'),borderRadius:5,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw} mm`}}},scales:{x:{grid:{display:false},ticks:{font:{family:'Space Mono',size:9},maxRotation:45}},y:{grid:{color:'#f0f0ec'},ticks:{font:{family:'Space Mono',size:9}},beginAtZero:true}}}});
+  }
 }
 
 function renderHistory(){
@@ -723,38 +730,19 @@ function importCSV(event){
     lines.forEach(line=>{
       const cols=line.split(',');
       const raw=(cols[0]||'').trim().replace(/^"|"$/g,'');
-      // ── Only process rows where col 0 is a recognisable date ──
       let key='';
-      if(/^\d{4}-\d{2}-\d{2}$/.test(raw)){
-        key=raw;
-      } else if(/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(raw)){
-        const[dd,mm,yy]=raw.split('/');
-        key=`${yy}-${mm.padStart(2,'0')}-${dd.padStart(2,'0')}`;
-      } else if(/^\d{1,2}-\d{1,2}-\d{4}$/.test(raw)){
-        const[dd,mm,yy]=raw.split('-');
-        key=`${yy}-${mm.padStart(2,'0')}-${dd.padStart(2,'0')}`;
-      } else if(/^\d{5}$/.test(raw)){
-        const serial=parseInt(raw);
-        const d=new Date(Math.round((serial-25569)*86400*1000));
-        key=`${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`;
-      } else {
-        // Not a date row — silently skip (headers, fragments, titles, blanks)
-        return;
-      }
+      if(/^\d{4}-\d{2}-\d{2}$/.test(raw)){key=raw;}
+      else if(/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(raw)){const[dd,mm,yy]=raw.split('/');key=`${yy}-${mm.padStart(2,'0')}-${dd.padStart(2,'0')}`;}
+      else if(/^\d{1,2}-\d{1,2}-\d{4}$/.test(raw)){const[dd,mm,yy]=raw.split('-');key=`${yy}-${mm.padStart(2,'0')}-${dd.padStart(2,'0')}`;}
+      else if(/^\d{5}$/.test(raw)){const serial=parseInt(raw);const d=new Date(Math.round((serial-25569)*86400*1000));key=`${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`;}
+      else{return;}
       if(!/^\d{4}-\d{2}-\d{2}$/.test(key)){skipped++;return;}
-      // ── Parse rainfall (col 4) ──
       const rawMm=(cols[4]||'').trim().replace(/^"|"$/g,'');
-      // Skip text values like 'Pre-season', or formula results
       if(/[a-zA-Z]/.test(rawMm)){skipped++;return;}
       const cleanMm=rawMm.replace(/[^0-9.-]/g,'');
       const mmVal=cleanMm===''?0:parseFloat(cleanMm);
       if(isNaN(mmVal)||mmVal<0){skipped++;return;}
-      // ── Save record ──
-      data[key]={
-        mm:Math.round(mmVal*10)/10,
-        event:(cols[8]||'').trim().replace(/^"|"$/g,''),
-        notes:(cols[10]||'').trim().replace(/^"|"$/g,'')
-      };
+      data[key]={mm:Math.round(mmVal*10)/10,event:(cols[8]||'').trim().replace(/^"|"$/g,''),notes:(cols[10]||'').trim().replace(/^"|"$/g,'')};
       imported++;
     });
     saveLocal(data);
@@ -777,19 +765,14 @@ function importHistCSV(event){
   const reader=new FileReader();
   reader.onload=async e=>{
     const lines=e.target.result.split('\n').map(l=>l.trim()).filter(Boolean);
-    const hist=loadHist();
-    let imported=0,skipped=0;
-    // Expected columns: Season,Sep,Oct,Nov,Dec,Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Season Total,...
-    // Season col = A (index 0), months = B-M (index 1-12)
-    const monthCols=[9,10,11,12,1,2,3,4,5,6,7,8]; // Sep→Aug month numbers
+    const hist=loadHist();let imported=0,skipped=0;
+    const monthCols=[9,10,11,12,1,2,3,4,5,6,7,8];
     lines.forEach(line=>{
       const cols=line.split(',').map(c=>c.trim());
       if(!cols[0])return;
-      // Skip header rows
       if(cols[0].toLowerCase().includes('season')&&isNaN(cols[0][0]))return;
       if(cols[0].toLowerCase().includes('average'))return;
       if(cols[0].toLowerCase().includes('total'))return;
-      // Parse season label e.g. 1996/97 or 1996/1997
       const seasonMatch=cols[0].match(/(\d{4})[/\\](\d{2,4})/);
       if(!seasonMatch){skipped++;return;}
       const y1=parseInt(seasonMatch[1]);
@@ -809,7 +792,6 @@ function importHistCSV(event){
     document.getElementById('importHistResult').textContent=`✓ Imported ${imported} seasons (${count} total on record). ${skipped} rows skipped.`;
     updateHistPreview(hist);
     showToast(`Imported ${imported} seasons`);
-    // Push hist to GitHub as separate file
     await pushHistToGitHub(hist);
     renderAnalysis();
   };
@@ -836,7 +818,6 @@ async function pushHistToGitHub(hist){
     const body={message:`Update historical data ${new Date().toISOString().slice(0,10)}`,content:btoa(unescape(encodeURIComponent(JSON.stringify(hist,null,2))))};
     if(getRes.ok){const j=await getRes.json();body.sha=j.sha;}
     await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${HIST_FILE}`,{method:'PUT',headers:{Authorization:`token ${getToken()}`,'Content-Type':'application/json',Accept:'application/vnd.github.v3+json'},body:JSON.stringify(body)});
-    console.log('Historical data pushed to GitHub');
   }catch(e){console.error('Hist push failed',e);}
 }
 
@@ -889,42 +870,37 @@ function showToast(msg){const t=document.getElementById('toast');t.textContent=m
 document.getElementById('rainInput').addEventListener('keydown',e=>{if(e.key==='Enter')saveEntry();});
 
 async function init(){
+  const loadTxt=document.getElementById('loadingTxt');
+  const loadErr=document.getElementById('loadingErr');
   setSyncStatus('syncing','Loading from GitHub…');
   try{
+    loadTxt.textContent='Connecting to GitHub…';
     const remote=await fetchFromGitHub();
-    if(remote&&remote.data){const local=loadLocal();const merged={...remote.data,...local};saveLocal(merged);const now=new Date().toLocaleTimeString();localStorage.setItem('nomvula_lastSync',now);setSyncStatus('ok',`Synced ${now}`);}
-    else setSyncStatus('ok','Ready');
-    // Also load historical data from GitHub
+    if(remote&&remote.data){
+      loadTxt.textContent='Merging data…';
+      const local=loadLocal();
+      const merged={...remote.data,...local};
+      saveLocal(merged);
+      const now=new Date().toLocaleTimeString();
+      localStorage.setItem('nomvula_lastSync',now);
+      setSyncStatus('ok',`Synced ${now}`);
+    } else {
+      setSyncStatus('ok','Ready');
+    }
+    loadTxt.textContent='Loading historical data…';
     const remoteHist=await fetchHistFromGitHub();
-    if(remoteHist){const localHist=loadHist();const mergedHist={...remoteHist,...localHist};saveHist(mergedHist);}
-  }catch(e){setSyncStatus('error','Offline — using local data');}
+    if(remoteHist){const localHist=loadHist();saveHist({...remoteHist,...localHist});}
+  }catch(e){
+    console.error('Init error:',e);
+    setSyncStatus('error','Offline — using local data');
+    loadErr.style.display='block';
+    loadErr.textContent=`Error: ${e.message}. Using local data.`;
+    await new Promise(r=>setTimeout(r,2000));
+  }
   renderHome();
   document.getElementById('loadingScreen').style.display='none';
 }
 init();
 </script>
 </body>
-</html>  // HTML Monthly chart
-  (function(){
-    const el=document.getElementById('chartMonthly');
-    if(!el)return;
-    const values=st.moBreakdown.map(m=>m.total);
-    const labels=st.moBreakdown.map(m=>m.label);
-    const max=Math.max(...values,1);
-    let html='<div style="display:flex;align-items:flex-end;gap:4px;height:140px;padding:8px 4px 0;width:100%;box-sizing:border-box;">';
-    values.forEach((v,i)=>{
-      const pct=Math.round((v/max)*100);
-      const fill=v>0?'#2d6a4f':'#e0ede4';
-      html+=`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;">
-        <div style="font-size:8px;color:#2d6a4f;font-family:monospace;height:14px;line-height:14px;">${v>0?v:''}</div>
-        <div style="flex:1;width:100%;display:flex;align-items:flex-end;">
-          <div style="width:100%;height:${pct}%;background:${fill};border-radius:3px 3px 0 0;min-height:${v>0?3:1}px;"></div>
-        </div>
-        <div style="font-size:7px;color:#888;font-family:monospace;text-align:center;line-height:1.1;word-break:break-all;">${labels[i].replace('-','\n')}</div>
-      </div>`;
-    });
-    html+='</div>';
-    el.innerHTML=html;
-    el.style.display='block';
-  })();
-
+</html>
